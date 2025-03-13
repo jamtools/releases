@@ -55,7 +55,7 @@ runs:
       shell: bash
       if: ${{ !inputs.submit || inputs.profile != 'production' }}
       working-directory: apps/mobile
-      run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} --local=${{ inputs.local || false }}
+      run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ (inputs.local && '--local') || '' }}
 
     - name: Build & submit mobile
       shell: bash
