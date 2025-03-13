@@ -47,9 +47,16 @@ jobs:
           path: .github/composite-actions
           ref: ${{ github.sha }}
 
-      - name: Build and Test
+      - name: Build Mobile App Composite Action
         uses: ./.github/composite-actions/.github/actions/build_mobile_composite_action
-
+        with:
+          expo-token: ${{ secrets.EXPO_TOKEN }}
+          platform: all
+          profile: preview
+          submit: false
+          # platform: ${{ inputs.platform }}
+          # profile: ${{ inputs.profile }}
+          # submit: ${{ inputs.submit }}
 
       # - name: List directories recursively
         # run: ls -alR
