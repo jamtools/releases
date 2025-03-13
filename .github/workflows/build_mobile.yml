@@ -39,6 +39,7 @@ jobs:
         with:
           repository: ${{ secrets.REPO }}
           token: ${{ secrets.REPO_TOKEN }}
+          ref: multi-tenant
 
       - name: Checkout songdrive-releases repo into `.github/composite-actions`
         uses: actions/checkout@v3
@@ -47,15 +48,16 @@ jobs:
           path: .github/composite-actions
           ref: ${{ github.sha }}
 
-      # - name: Build Mobile App with EAS
-      #   uses: ./.github/composite-actions/.github/actions/build_mobile_eas
-      #   with:
-      #     expo-token: ${{ secrets.EXPO_TOKEN }}
-      #     platform: all
-      #     profile: preview
-      #     submit: false
-
-      - name: Build Mobile App with Gradle
-        uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
+      - name: Build Mobile App with EAS
+        uses: ./.github/composite-actions/.github/actions/build_mobile_eas
         with:
-          build-type: debug
+          expo-token: ${{ secrets.EXPO_TOKEN }}
+          platform: all
+          profile: preview
+          submit: false
+          local: true
+
+      # - name: Build Mobile App with Gradle
+      #   uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
+      #   with:
+      #     build-type: debug
