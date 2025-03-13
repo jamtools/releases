@@ -47,5 +47,8 @@ jobs:
           path: .github/composite-actions
           ref: ${{ github.sha }}
 
-      - name: Build and Test
-        uses: ./.github/composite-actions/.github./actions/build_mobile_composite_action
+      # - name: Build and Test
+      #   uses: ./.github/composite-actions/.github./actions/build_mobile_composite_action
+
+      - name: List directories recursively
+        run: ls -alR
