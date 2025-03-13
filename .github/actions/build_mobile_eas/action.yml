@@ -45,6 +45,8 @@ runs:
     - name: Build app
       shell: bash
       run: pnpm run build
+      env:
+        SPRINGBOARD_PLATFORM_VARIANT: mobile
 
     - name: Prebuild expo app
       shell: bash
