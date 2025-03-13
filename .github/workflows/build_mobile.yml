@@ -1,0 +1,44 @@
+name: build_mobile
+
+on:
+  branches:
+    - "*"
+
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build for (all/android/ios)
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - android
+          - ios
+      profile:
+        description: EAS build profile (preview/development/production)
+        type: choice
+        required: true
+        default: preview
+        options:
+          - preview
+          - development
+          - production
+      submit:
+        description: Auto submit to the store? (production only)
+        type: boolean
+        required: false
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ secrets.REPO }}
+          token: ${{ secrets.REPO_TOKEN }}
+      - name: Build and Test
+        uses: ./.github/actions/build_mobile_composite_action
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

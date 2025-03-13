@@ -1,0 +1,53 @@
+name: Build Mobile App
+description: A composite action to build an expo app.
+
+# inputs:
+#   repo-token:
+#     description: 'Repository token'
+#     required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # - name: Checkout code
+    #   uses: actions/checkout@v3
+    #   with:
+    #     repository: ${{ inputs.repo }}
+    #     token: ${{ inputs.repo-token }}
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.13.2
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+
+    # - name: 🏗 Setup Expo
+    #   uses: expo/expo-github-action@v8
+    #   with:
+    #     eas-version: latest
+    #     token: ${{ secrets.EXPO_TOKEN }}
+
+    - name: Install modules
+      run: pnpm i
+
+    - name: Build app
+      run: pnpm run build
+
+    # - name: Prebuild expo app
+    #   working-directory: apps/mobile
+    #   run: npx expo prebuild
+
+    # - name: Send build to eas
+    #   if: ${{ !github.event.inputs.submit || github.event.inputs.profile != 'production' }}
+    #   working-directory: apps/mobile
+    #   run: eas build --non-interactive --wait --platform=${{ github.event.inputs.platform }} --profile=${{ github.event.inputs.profile }}
+
+    # - name: Build & submit mobile
+    #   if: ${{ github.event.inputs.submit && github.event.inputs.profile == 'production' }}
+    #   working-directory: apps/mobile
+    #   run: eas build --non-interactive --wait --auto-submit --platform=${{ github.event.inputs.platform }} --profile=${{ github.event.inputs.profile }}
