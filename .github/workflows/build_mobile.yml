@@ -1,8 +1,9 @@
 name: build_mobile
 
 on:
-  branches:
-    - "*"
+  push:
+    branches:
+      - '*'
 
   workflow_dispatch:
     inputs:
