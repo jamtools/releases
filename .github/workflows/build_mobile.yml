@@ -39,7 +39,13 @@ jobs:
         with:
           repository: ${{ secrets.REPO }}
           token: ${{ secrets.REPO_TOKEN }}
-      - name: Build and Test
-        uses: ./.github/actions/build_mobile_composite_action
+
+      - name: Checkout songdrive-releases repo into `.github/composite-actions`
+        uses: actions/checkout@v3
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: jamtools/songdrive-releases
+          path: .github/composite-actions
+          ref: ${{ github.sha }}
+
+      - name: Build and Test
+        uses: ./.github/composite-actions/.github./actions/build_mobile_composite_action
