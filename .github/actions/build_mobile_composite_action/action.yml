@@ -33,9 +33,11 @@ runs:
     #     token: ${{ secrets.EXPO_TOKEN }}
 
     - name: Install modules
+      shell: bash
       run: pnpm i
 
     - name: Build app
+      shell: bash
       run: pnpm run build
 
     # - name: Prebuild expo app
