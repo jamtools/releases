@@ -47,16 +47,15 @@ jobs:
           path: .github/composite-actions
           ref: ${{ github.sha }}
 
-      - name: Build Mobile App Composite Action
-        uses: ./.github/composite-actions/.github/actions/build_mobile_composite_action
-        with:
-          expo-token: ${{ secrets.EXPO_TOKEN }}
-          platform: all
-          profile: preview
-          submit: false
-          # platform: ${{ inputs.platform }}
-          # profile: ${{ inputs.profile }}
-          # submit: ${{ inputs.submit }}
+      # - name: Build Mobile App with EAS
+      #   uses: ./.github/composite-actions/.github/actions/build_mobile_eas
+      #   with:
+      #     expo-token: ${{ secrets.EXPO_TOKEN }}
+      #     platform: all
+      #     profile: preview
+      #     submit: false
 
-      # - name: List directories recursively
-        # run: ls -alR
+      - name: Build Mobile App with Gradle
+        uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
+        with:
+          build-type: debug

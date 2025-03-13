@@ -1,5 +1,5 @@
-name: Build Mobile App
-description: A composite action to build an expo app.
+name: Build Mobile App with EAS
+description: A composite action to build an expo app with EAS.
 
 inputs:
   expo-token:
@@ -29,7 +29,7 @@ runs:
         node-version: 20
         cache: 'pnpm'
 
-    - name: 🏗 Setup Expo
+    - name: Setup Expo
       uses: expo/expo-github-action@v8
       with:
         eas-version: latest

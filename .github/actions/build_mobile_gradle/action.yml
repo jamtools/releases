@@ -1,0 +1,57 @@
+name: Build Mobile App with Gradle
+description: A composite action to build an expo app with gradle.
+
+inputs:
+  build-type:
+    description: 'Specify the build type (release/debug)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.13.2
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+
+    - name: Setup Expo
+      uses: expo/expo-github-action@v8
+      with:
+        eas-version: latest
+
+    - name: Install modules
+      shell: bash
+      run: pnpm i
+
+    - name: Build app
+      shell: bash
+      run: pnpm run build
+
+    - name: Prebuild expo app
+      shell: bash
+      working-directory: apps/mobile
+      run: npx expo prebuild
+
+    - name: Build with Gradle
+      shell: bash
+      run: |
+        if [ "${{ inputs.build-type }}" == "release" ]; then
+          ./gradlew assembleRelease
+        else
+          ./gradlew assembleDebug
+        fi
+      working-directory: apps/mobile/android
+
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-apk
+        path: |
+          apps/mobile/android/app/build/outputs/apk/release/*.apk
+          apps/mobile/android/app/build/outputs/apk/debug/*.apk
