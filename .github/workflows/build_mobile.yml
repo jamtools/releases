@@ -51,11 +51,11 @@ jobs:
       - name: Build Mobile App with EAS
         uses: ./.github/composite-actions/.github/actions/build_mobile_eas
         with:
-          expo-token: ${{ secrets.EXPO_TOKEN }}
-          platform: all
+          local: true
+          platform: android
           profile: preview
           submit: false
-          local: true
+          expo-token: ${{ secrets.EXPO_TOKEN }}
 
       # - name: Build Mobile App with Gradle
       #   uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
