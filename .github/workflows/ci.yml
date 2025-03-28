@@ -5,7 +5,8 @@ on:
     branches:
     - '*'
   workflow_dispatch:
-
+  repository_dispatch:
+    types: [ build-remote ]
 
 jobs:
   build:

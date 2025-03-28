@@ -5,6 +5,9 @@ on:
     branches:
     - '*'
 
+  repository_dispatch:
+    types: [ build-remote ]
+
   workflow_dispatch:
     inputs:
       platform:
