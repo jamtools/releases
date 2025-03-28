@@ -1,0 +1,46 @@
+name: Run WebdriverIO tests
+description: A composite action to run WebdriverIO tests
+
+inputs:
+  browser:
+    description: 'Which browser to test with'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+
+  - name: Install Chromium
+    shell: bash
+    run: sudo apt-get install -y chromium-browser
+
+  - name: Install pnpm
+    uses: pnpm/action-setup@v4
+    with:
+      version: 9.13.2
+
+  - name: Install Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: 20
+      cache: 'pnpm'
+
+  - name: Install modules
+    shell: bash
+    run: pnpm i
+
+  - name: Install test modules
+    shell: bash
+    run: cd tests-e2e && npm i
+
+  - name: Build app
+    shell: bash
+    run: pnpm run build
+    env:
+      SPRINGBOARD_PLATFORM_VARIANT: main
+
+  - name: Run tests
+    shell: bash
+    run: cd tests-e2e && npm test
+    env:
+      CI: true

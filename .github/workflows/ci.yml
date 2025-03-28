@@ -4,6 +4,8 @@ on:
   push:
     branches:
     - '*'
+  workflow_dispatch:
+
 
 jobs:
   build:
@@ -83,6 +85,9 @@ jobs:
 
     - name: Install modules
       run: pnpm i
+
+    - name: Install modules for e2e tests
+      run: cd tests-e2e && npm i
 
     - name: Check Types
       run: pnpm run check-types

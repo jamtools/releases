@@ -1,0 +1,31 @@
+name: e2e_tests
+
+on:
+  push:
+    branches:
+    - '*'
+  workflow_dispatch:
+
+
+jobs:
+  wdio_chrome:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ secrets.REPO }}
+        token: ${{ secrets.REPO_TOKEN }}
+        ref: multi-tenant-dev
+
+    - name: Checkout songdrive-releases repo into `.github/composite-actions`
+      uses: actions/checkout@v3
+      with:
+        repository: jamtools/songdrive-releases
+        path: .github/composite-actions
+        ref: ${{ github.sha }}
+
+    - name: Run WDIO tests
+      uses: ./.github/composite-actions/.github/actions/wdio_e2e
+      with:
+        browser: chrome
