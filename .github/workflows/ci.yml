@@ -91,6 +91,10 @@ jobs:
 
     - name: Check Types
       run: pnpm run check-types
+
+    - name: Check Types for Tests
+      run: cd tests-e2e && npm run check-types
+
   test:
     runs-on: ubuntu-latest
     steps:

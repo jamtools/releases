@@ -35,7 +35,7 @@ runs:
 
   - name: Build app
     shell: bash
-    run: pnpm run build
+    run: pnpm run build-e2e
     env:
       SPRINGBOARD_PLATFORM_VARIANT: main
 
