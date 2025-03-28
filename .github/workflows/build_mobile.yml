@@ -3,7 +3,7 @@ name: build_mobile
 on:
   push:
     branches:
-      - '*'
+    - '*'
 
   workflow_dispatch:
     inputs:
@@ -13,18 +13,18 @@ on:
         required: true
         default: all
         options:
-          - all
-          - android
-          - ios
+        - all
+        - android
+        - ios
       profile:
         description: EAS build profile (preview/development/production)
         type: choice
         required: true
         default: preview
         options:
-          - preview
-          - development
-          - production
+        - preview
+        - development
+        - production
       submit:
         description: Auto submit to the store? (production only)
         type: boolean
@@ -34,30 +34,29 @@ jobs:
   mobile:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ secrets.REPO }}
-          token: ${{ secrets.REPO_TOKEN }}
-          ref: multi-tenant
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ secrets.REPO }}
+        token: ${{ secrets.REPO_TOKEN }}
+        ref: multi-tenant-dev
 
-      - name: Checkout songdrive-releases repo into `.github/composite-actions`
-        uses: actions/checkout@v3
-        with:
-          repository: jamtools/songdrive-releases
-          path: .github/composite-actions
-          ref: ${{ github.sha }}
+    - name: Checkout songdrive-releases repo into `.github/composite-actions`
+      uses: actions/checkout@v3
+      with:
+        repository: jamtools/songdrive-releases
+        path: .github/composite-actions
+        ref: ${{ github.sha }}
 
-      - name: Build Mobile App with EAS
-        uses: ./.github/composite-actions/.github/actions/build_mobile_eas
-        with:
-          local: true
-          platform: android
-          profile: preview
-          submit: false
-          expo-token: ${{ secrets.EXPO_TOKEN }}
-
-      # - name: Build Mobile App with Gradle
-      #   uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
-      #   with:
-      #     build-type: debug
+    - name: Build Mobile App with EAS
+      uses: ./.github/composite-actions/.github/actions/build_mobile_eas
+      with:
+        local: true
+        platform: android
+        profile: preview
+        submit: false
+        expo-token: ${{ secrets.EXPO_TOKEN }}
+    # - name: Build Mobile App with Gradle
+    #   uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
+    #   with:
+    #     build-type: debug
