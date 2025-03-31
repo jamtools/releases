@@ -21,6 +21,13 @@ inputs:
 runs:
   using: 'composite'
   steps:
+  - name: Log Action Inputs
+    run: |
+      echo "platform: ${{ inputs.platform }}"
+      echo "profile: ${{ inputs.profile }}"
+      echo "submit: ${{ inputs.submit }}"
+      echo "local: ${{ inputs.local }}"
+    shell: bash
   - name: Install pnpm
     uses: pnpm/action-setup@v4
     with:

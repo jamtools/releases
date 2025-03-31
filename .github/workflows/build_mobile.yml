@@ -41,6 +41,12 @@ jobs:
   mobile:
     runs-on: ubuntu-latest
     steps:
+    - name: Log Workflow Inputs
+      run: |
+        echo "platform: ${{ github.event.inputs.platform }}"
+        echo "profile: ${{ github.event.inputs.profile }}"
+        echo "run_on_eas: ${{ github.event.inputs.run_on_eas }}"
+        echo "submit: ${{ github.event.inputs.submit }}"
     - name: Checkout code
       uses: actions/checkout@v3
       with:
