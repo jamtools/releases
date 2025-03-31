@@ -65,9 +65,9 @@ jobs:
       uses: ./.github/composite-actions/.github/actions/build_mobile_eas
       with:
         local: ${{ !inputs.run_on_eas }}
-        platform: android
-        profile: preview
-        submit: false
+        platform: ${{ inputs.platform || "android" }}
+        profile: ${{ inputs.profile || "preview" }}
+        submit: ${{ inputs.submit }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
     # - name: Build Mobile App with Gradle
     #   uses: ./.github/composite-actions/.github/actions/build_mobile_gradle

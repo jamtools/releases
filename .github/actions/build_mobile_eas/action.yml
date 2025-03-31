@@ -63,7 +63,7 @@ runs:
 
   - name: Run eas locally
     shell: bash
-    if: ${{ inputs.local }}
+    if: ${{ inputs.local === 'true' }}
     working-directory: apps/mobile
     env:
       EXPO_GITHUB_ACTIONS_RUN: true
@@ -71,12 +71,12 @@ runs:
 
   - name: Send build to eas
     shell: bash
-    if: ${{ !inputs.local && (!inputs.submit || inputs.profile != 'production') }}
+    if: ${{ inputs.local !== 'true' && (inputs.submit !== 'true' || inputs.profile != 'production') }}
     working-directory: apps/mobile
     run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
 
   - name: Build & submit mobile
     shell: bash
-    if: ${{ inputs.submit && inputs.profile == 'production' }}
+    if: ${{ inputs.submit === 'true' && inputs.profile == 'production' }}
     working-directory: apps/mobile
     run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
