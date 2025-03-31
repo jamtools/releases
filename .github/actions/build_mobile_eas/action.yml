@@ -21,46 +21,55 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 9.13.2
+  - name: Install pnpm
+    uses: pnpm/action-setup@v4
+    with:
+      version: 9.13.2
 
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'pnpm'
+  - name: Install Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: 20
+      cache: 'pnpm'
 
-    - name: Setup Expo
-      uses: expo/expo-github-action@v8
-      with:
-        eas-version: latest
-        token: ${{ inputs.expo-token }}
+  - name: Setup Expo
+    uses: expo/expo-github-action@v8
+    with:
+      eas-version: latest
+      token: ${{ inputs.expo-token }}
 
-    - name: Install modules
-      shell: bash
-      run: pnpm i
+  - name: Install modules
+    shell: bash
+    run: pnpm i
 
-    - name: Build app
-      shell: bash
-      run: pnpm run build
-      env:
-        SPRINGBOARD_PLATFORM_VARIANT: mobile
+  - name: Build app
+    shell: bash
+    run: pnpm run build
+    env:
+      SPRINGBOARD_PLATFORM_VARIANT: mobile
 
-    - name: Prebuild expo app
-      shell: bash
-      working-directory: apps/mobile
-      run: npx expo prebuild
+  - name: Prebuild expo app
+    if: ${{ inputs.local }}
+    shell: bash
+    working-directory: apps/mobile
+    run: npx expo prebuild
 
-    - name: Send build to eas
-      shell: bash
-      if: ${{ !inputs.submit || inputs.profile != 'production' }}
-      working-directory: apps/mobile
-      run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ (inputs.local && '--local') || '' }}
+  - name: Run eas locally
+    shell: bash
+    if: ${{ inputs.local }}
+    working-directory: apps/mobile
+    env:
+      EXPO_GITHUB_ACTIONS_RUN: true
+    run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} --local
 
-    - name: Build & submit mobile
-      shell: bash
-      if: ${{ inputs.submit && inputs.profile == 'production' }}
-      working-directory: apps/mobile
-      run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
+  - name: Send build to eas
+    shell: bash
+    if: ${{ !inputs.local && (!inputs.submit || inputs.profile != 'production') }}
+    working-directory: apps/mobile
+    run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
+
+  - name: Build & submit mobile
+    shell: bash
+    if: ${{ inputs.submit && inputs.profile == 'production' }}
+    working-directory: apps/mobile
+    run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
