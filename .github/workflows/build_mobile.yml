@@ -28,6 +28,10 @@ on:
         - preview
         - development
         - production
+      run_on_eas:
+        description: Run build on eas? Will run locally in CI if false
+        type: boolean
+        default: false
       submit:
         description: Auto submit to the store? (production only)
         type: boolean
@@ -54,7 +58,7 @@ jobs:
     - name: Build Mobile App with EAS
       uses: ./.github/composite-actions/.github/actions/build_mobile_eas
       with:
-        local: true
+        local: ${{ !inputs.run_on_eas }}
         platform: android
         profile: preview
         submit: false
