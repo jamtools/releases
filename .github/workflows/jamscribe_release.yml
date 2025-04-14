@@ -18,6 +18,9 @@ jobs:
         token: ${{ secrets.REPO_TOKEN }}
         ref: multi-tenant-dev
 
+    - name: Install zipcmp
+      run: sudo apt-get update && sudo apt-get install -y libzip-tools
+
     - name: Checkout songdrive-releases repo into `.github/composite-actions`
       uses: actions/checkout@v3
       with:
