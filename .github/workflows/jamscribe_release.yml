@@ -47,7 +47,7 @@ jobs:
               map(select(.tagName | startswith($prefix)))
               | sort_by(.publishedAt)
               | last
-              | .tagName // empty
+              | .tagName[1:]
             ')
         echo "latest_tag=$latest" >> $GITHUB_OUTPUT
 
