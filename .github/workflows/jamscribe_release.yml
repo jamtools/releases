@@ -96,3 +96,9 @@ jobs:
         artifacts: dist.zip
         token: ${{ secrets.GITHUB_TOKEN }}
         makeLatest: true
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: jamscribe-dist
+        path: dist.zip
