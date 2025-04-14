@@ -78,8 +78,8 @@ jobs:
       if: steps.compare_hashes.outputs.match == 'false'
       uses: ncipollo/release-action@v1
       with:
-        tag: release-${{ github.run_number }}
-        name: Release ${{ github.run_number }}
+        tag: jamscribe-${{ github.run_number }}
+        name: JamScribe v${{ github.run_number }}
         body: Automated release
-        artifacts: build/output.zip
+        artifacts: dist
         token: ${{ secrets.GITHUB_TOKEN }}
