@@ -36,6 +36,7 @@ jobs:
 
     - name: Create dist.zip
       run: |
+        touch dist/example.txt
         cd dist
         zip -r ../dist.zip .
 
