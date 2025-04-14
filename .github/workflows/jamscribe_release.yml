@@ -48,7 +48,7 @@ jobs:
 
     - name: Download artifact from latest release
       if: steps.find_release.outputs.latest_tag != ''
-      uses: blauqs/actions-download-asset@v1
+      uses: blauqs/actions-download-asset@master
       with:
         repo: ${{ github.repository }}
         version: ${{ steps.find_release.outputs.latest_tag }}
