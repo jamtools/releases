@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - "*"
+  repository_dispatch:
+    types: [ build-remote ]
 
 jobs:
-  build-and-release:
+  release-jamscribe:
     runs-on: ubuntu-latest
     permissions:
       contents: write
