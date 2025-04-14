@@ -61,26 +61,17 @@ jobs:
         out: previous_release.zip
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Compute hash of new artifact
-      id: hash_new
-      run: echo "hash=$(sha256sum dist.zip | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
-
-    - name: Compute hash of previous artifact
-      if: steps.find_release.outputs.latest_tag != ''
-      id: hash_old
-      run: echo "hash=$(sha256sum previous_release.zip | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
-
-    - name: Check if hashes match
-      id: compare_hashes
+    - name: Compare ZIP files using zipcmp
+      id: compare_zips
       run: |
-        if [ "${{ steps.hash_new.outputs.hash }}" != "${{ steps.hash_old.outputs.hash }}" ]; then
-          echo "match=false" >> $GITHUB_OUTPUT
-        else
+        if zipcmp dist.zip previous_release.zip; then
           echo "match=true" >> $GITHUB_OUTPUT
+        else
+          echo "match=false" >> $GITHUB_OUTPUT
         fi
 
     - name: Create new release
-      if: steps.compare_hashes.outputs.match == 'false'
+      if: steps.compare_zips.outputs.match == 'false'
       uses: ncipollo/release-action@v1
       with:
         tag: vjamscribe-${{ github.run_number }}
