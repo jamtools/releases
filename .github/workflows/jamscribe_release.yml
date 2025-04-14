@@ -41,7 +41,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        PREFIX="jamscribe-"
+        PREFIX="vjamscribe-"
         latest=$(gh release list --repo "${{ github.repository }}" --limit 100 --json tagName,publishedAt \
           | jq -r --arg prefix "$PREFIX" '
               map(select(.tagName | startswith($prefix)))
@@ -83,7 +83,7 @@ jobs:
       if: steps.compare_hashes.outputs.match == 'false'
       uses: ncipollo/release-action@v1
       with:
-        tag: jamscribe-${{ github.run_number }}
+        tag: vjamscribe-${{ github.run_number }}
         name: JamScribe v${{ github.run_number }}
         body: Automated release
         artifacts: dist.zip
