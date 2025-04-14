@@ -31,12 +31,17 @@ jobs:
         entrypoint: apps/jam_scribe/jam_scribe_entrypoint.ts
         # output_directory: build
 
+    - name: Create dist.zip
+      run: |
+        cd dist
+        zip -r ../dist.zip .
+
     - name: Find latest matching release by tag prefix
       id: find_release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        PREFIX="release-"
+        PREFIX="jamscribe-"
         latest=$(gh release list --limit 100 --json tagName,publishedAt \
           | jq -r --arg prefix "$PREFIX" '
               map(select(.tagName | startswith($prefix)))
@@ -52,18 +57,18 @@ jobs:
       with:
         repo: ${{ github.repository }}
         version: ${{ steps.find_release.outputs.latest_tag }}
-        file: index.js
+        file: dist.zip
         out: previous_release
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Compute hash of new artifact
       id: hash_new
-      run: echo "hash=$(sha256sum dist/server/dist/local-server.cjs | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
+      run: echo "hash=$(sha256sum dist.zip | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
 
     - name: Compute hash of previous artifact
       if: steps.find_release.outputs.latest_tag != ''
       id: hash_old
-      run: echo "hash=$(sha256sum previous_release/index.js | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
+      run: echo "hash=$(sha256sum previous_release/dist.zip | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
 
     - name: Check if hashes match
       id: compare_hashes
