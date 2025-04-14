@@ -42,7 +42,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         PREFIX="jamscribe-"
-        latest=$(gh release list --limit 100 --json tagName,publishedAt \
+        latest=$(gh release list --repo "${{ github.repository }}" --limit 100 --json tagName,publishedAt \
           | jq -r --arg prefix "$PREFIX" '
               map(select(.tagName | startswith($prefix)))
               | sort_by(.publishedAt)
