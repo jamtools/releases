@@ -4,8 +4,20 @@ on:
   push:
     branches:
       - "*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Ref to use in application repo'
+        required: false
+        default: 'main'
   repository_dispatch:
     types: [ build-remote ]
+
+env:
+  TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && \
+    github.event.inputs.ref != '' && github.event.inputs.ref || \
+    github.event_name == 'repository_dispatch' && \
+    github.event.client_payload.sha != '' && github.event.client_payload.sha || 'main' }}
 
 jobs:
   release-jamscribe:
@@ -18,7 +30,7 @@ jobs:
       with:
         repository: ${{ secrets.REPO }}
         token: ${{ secrets.REPO_TOKEN }}
-        ref: multi-tenant-dev
+        ref: ${{ env.TARGET_BRANCH }}
 
     - name: Install zipcmp
       run: sudo apt-get update && sudo apt-get install -y zipcmp
