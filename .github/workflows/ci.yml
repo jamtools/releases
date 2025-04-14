@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches:
-    - '*'
+  # push:
+  #   branches:
+  #   - '*'
   workflow_dispatch:
   repository_dispatch:
     types: [ build-remote ]
@@ -62,6 +62,8 @@ jobs:
 
     - name: Build Docker image
       run: docker compose build
+      env:
+        PORT: 1337
   types:
     runs-on: ubuntu-latest
     steps:
