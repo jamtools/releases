@@ -86,5 +86,5 @@ jobs:
         tag: jamscribe-${{ github.run_number }}
         name: JamScribe v${{ github.run_number }}
         body: Automated release
-        artifacts: dist
+        artifacts: dist.zip
         token: ${{ secrets.GITHUB_TOKEN }}
