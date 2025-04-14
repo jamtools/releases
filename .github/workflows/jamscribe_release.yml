@@ -93,3 +93,4 @@ jobs:
         body: Automated release
         artifacts: dist.zip
         token: ${{ secrets.GITHUB_TOKEN }}
+        makeLatest: true
