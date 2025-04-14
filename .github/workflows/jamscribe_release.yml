@@ -1,0 +1,85 @@
+name: JamScribe release
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ secrets.REPO }}
+        token: ${{ secrets.REPO_TOKEN }}
+        ref: multi-tenant-dev
+
+    - name: Checkout songdrive-releases repo into `.github/composite-actions`
+      uses: actions/checkout@v3
+      with:
+        repository: jamtools/songdrive-releases
+        path: .github/composite-actions
+        ref: ${{ github.sha }}
+
+    - name: Run build composite action
+      uses: .github/composite-actions/.github/actions/build_app
+      with:
+        entrypoint: apps/jam_scribe/jam_scribe_entrypoint.ts
+        # output_directory: build
+
+    - name: Find latest matching release by tag prefix
+      id: find_release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PREFIX="release-"
+        latest=$(gh release list --limit 100 --json tagName,publishedAt \
+          | jq -r --arg prefix "$PREFIX" '
+              map(select(.tagName | startswith($prefix)))
+              | sort_by(.publishedAt)
+              | last
+              | .tagName // empty
+            ')
+        echo "latest_tag=$latest" >> $GITHUB_OUTPUT
+
+    - name: Download artifact from latest release
+      if: steps.find_release.outputs.latest_tag != ''
+      uses: blauqs/actions-download-asset@v1
+      with:
+        repo: ${{ github.repository }}
+        version: ${{ steps.find_release.outputs.latest_tag }}
+        file: index.js
+        out: previous_release
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Compute hash of new artifact
+      id: hash_new
+      run: echo "hash=$(sha256sum dist/server/dist/local-server.cjs | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
+
+    - name: Compute hash of previous artifact
+      if: steps.find_release.outputs.latest_tag != ''
+      id: hash_old
+      run: echo "hash=$(sha256sum previous_release/index.js | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
+
+    - name: Check if hashes match
+      id: compare_hashes
+      run: |
+        if [ "${{ steps.hash_new.outputs.hash }}" != "${{ steps.hash_old.outputs.hash }}" ]; then
+          echo "match=false" >> $GITHUB_OUTPUT
+        else
+          echo "match=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create new release
+      if: steps.compare_hashes.outputs.match == 'false'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: release-${{ github.run_number }}
+        name: Release ${{ github.run_number }}
+        body: Automated release
+        artifacts: build/output.zip
+        token: ${{ secrets.GITHUB_TOKEN }}
