@@ -58,7 +58,7 @@ jobs:
         repo: ${{ github.repository }}
         version: ${{ steps.find_release.outputs.latest_tag }}
         file: dist.zip
-        out: previous_release
+        out: previous_release.zip
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Compute hash of new artifact
@@ -68,7 +68,7 @@ jobs:
     - name: Compute hash of previous artifact
       if: steps.find_release.outputs.latest_tag != ''
       id: hash_old
-      run: echo "hash=$(sha256sum previous_release/dist.zip | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
+      run: echo "hash=$(sha256sum previous_release.zip | cut -d ' ' -f1)" >> $GITHUB_OUTPUT
 
     - name: Check if hashes match
       id: compare_hashes
