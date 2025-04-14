@@ -26,7 +26,7 @@ jobs:
         ref: ${{ github.sha }}
 
     - name: Run build composite action
-      uses: .github/composite-actions/.github/actions/build_app
+      uses: ./.github/composite-actions/.github/actions/build_app
       with:
         entrypoint: apps/jam_scribe/jam_scribe_entrypoint.ts
         # output_directory: build
