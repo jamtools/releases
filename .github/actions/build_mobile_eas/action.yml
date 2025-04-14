@@ -46,17 +46,19 @@ runs:
       token: ${{ inputs.expo-token }}
 
   - name: Install modules
+    if: ${{ inputs.local == 'true' }}
     shell: bash
     run: pnpm i
 
   - name: Build app
+    if: ${{ inputs.local == 'true' }}
     shell: bash
     run: pnpm run build
     env:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
 
   - name: Prebuild expo app
-    if: ${{ inputs.local }}
+    if: ${{ inputs.local == 'true' }}
     shell: bash
     working-directory: apps/mobile
     run: npx expo prebuild
