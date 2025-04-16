@@ -46,7 +46,6 @@ runs:
       token: ${{ inputs.expo-token }}
 
   - name: Install modules
-    if: ${{ inputs.local == 'true' }}
     shell: bash
     run: pnpm i
 
