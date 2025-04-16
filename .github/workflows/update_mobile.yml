@@ -1,9 +1,9 @@
 name: update_mobile
 
 on:
-  # push:
-  #   branches:
-  #   - '*'
+  push:
+    branches:
+    - '*'
 
   # repository_dispatch:
   #   types: [ build-remote ]
@@ -29,7 +29,7 @@ on:
         - development
         - production
       ref:
-        description: 'Ref to use in application repo'
+        description: 'Ref to use in application repo (ignored for now)'
         required: false
         default: 'main'
       message:
@@ -49,13 +49,13 @@ jobs:
         echo "platform: ${{ github.event.inputs.platform }}"
         echo "profile: ${{ github.event.inputs.profile }}"
         echo "ref: ${{ github.event.inputs.ref }}"
-        echo "TARGET_BRANCH: ${{ env.TARGET_BRANCH }}"
+        echo "TARGET_BRANCH: mobile-app-rpc (hardcoded)"
     - name: Checkout code
       uses: actions/checkout@v3
       with:
         repository: ${{ secrets.REPO }}
         token: ${{ secrets.REPO_TOKEN }}
-        ref: ${{ env.TARGET_BRANCH }}
+        ref: mobile-app-rpc
 
     - name: Checkout songdrive-releases repo into `.github/composite-actions`
       uses: actions/checkout@v3
@@ -67,6 +67,6 @@ jobs:
     - name: Update Mobile App with EAS
       uses: ./.github/composite-actions/.github/actions/update_mobile_eas
       with:
-        platform: ${{ inputs.platform || 'android' }}
+        platform: ${{ inputs.platform || 'ios' }}
         profile: ${{ inputs.profile || 'preview' }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
