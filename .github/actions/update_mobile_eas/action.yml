@@ -48,11 +48,6 @@ runs:
     env:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
 
-  - name: Verify update assets
-    shell: bash
-    working-directory: apps/mobile
-    run: npx expo-updates assets:verify
-
   - name: Send update to eas
     shell: bash
     working-directory: apps/mobile
