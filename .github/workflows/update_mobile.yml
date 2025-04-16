@@ -1,0 +1,72 @@
+name: update_mobile
+
+on:
+  # push:
+  #   branches:
+  #   - '*'
+
+  # repository_dispatch:
+  #   types: [ build-remote ]
+
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build for (all/android/ios)
+        type: choice
+        required: true
+        default: all
+        options:
+        - all
+        - android
+        - ios
+      profile:
+        description: EAS build profile (preview/development/production)
+        type: choice
+        required: true
+        default: preview
+        options:
+        - preview
+        - development
+        - production
+      ref:
+        description: 'Ref to use in application repo'
+        required: false
+        default: 'main'
+      message:
+        description: Update message (e.g., "Bug fixes and improvements")
+        type: string
+        required: true
+
+env:
+  TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref || github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha || 'main' }}
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Log Workflow Inputs
+      run: |
+        echo "platform: ${{ github.event.inputs.platform }}"
+        echo "profile: ${{ github.event.inputs.profile }}"
+        echo "ref: ${{ github.event.inputs.ref }}"
+        echo "TARGET_BRANCH: ${{ env.TARGET_BRANCH }}"
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ secrets.REPO }}
+        token: ${{ secrets.REPO_TOKEN }}
+        ref: ${{ env.TARGET_BRANCH }}
+
+    - name: Checkout songdrive-releases repo into `.github/composite-actions`
+      uses: actions/checkout@v3
+      with:
+        repository: jamtools/songdrive-releases
+        path: .github/composite-actions
+        ref: ${{ github.sha }}
+
+    - name: Update Mobile App with EAS
+      uses: ./.github/composite-actions/.github/actions/update_mobile_eas
+      with:
+        platform: ${{ inputs.platform || 'android' }}
+        profile: ${{ inputs.profile || 'preview' }}
+        expo-token: ${{ secrets.EXPO_TOKEN }}

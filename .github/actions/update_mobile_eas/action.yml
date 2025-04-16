@@ -1,0 +1,61 @@
+name: Update Mobile App with EAS Update
+description: A composite action to update an expo app with EAS Update.
+
+inputs:
+  expo-token:
+    description: 'Expo token'
+    required: true
+  platform:
+    description: 'Platform to build for (all/android/ios)'
+    required: true
+  profile:
+    description: 'EAS build profile (preview/development/production)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Log Action Inputs
+    run: |
+      echo "platform: ${{ inputs.platform }}"
+      echo "profile: ${{ inputs.profile }}"
+      echo "submit: ${{ inputs.submit }}"
+    shell: bash
+  - name: Install pnpm
+    uses: pnpm/action-setup@v4
+    with:
+      version: 9.13.2
+
+  - name: Install Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: 20
+      cache: 'pnpm'
+
+  - name: Setup Expo
+    uses: expo/expo-github-action@v8
+    with:
+      eas-version: latest
+      token: ${{ inputs.expo-token }}
+
+  - name: Install modules
+    shell: bash
+    run: pnpm i
+
+  - name: Build app
+    shell: bash
+    run: pnpm run build
+    env:
+      SPRINGBOARD_PLATFORM_VARIANT: mobile
+
+  - name: Verify update assets
+    shell: bash
+    working-directory: apps/mobile
+    run: npx expo-updates assets:verify
+
+  - name: Send update to eas
+    shell: bash
+    working-directory: apps/mobile
+    run: |
+      LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+      eas update --non-interactive --channel=${{ (inputs.profile == 'production' && 'beta-production') || inputs.profile }} --message="$LATEST_COMMIT_MESSAGE" --environment=${{ (inputs.profile == 'production' && 'production') || 'preview' }} --platform=${{ inputs.platform }}
