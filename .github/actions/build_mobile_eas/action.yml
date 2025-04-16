@@ -50,7 +50,6 @@ runs:
     run: pnpm i
 
   - name: Build app
-    if: ${{ inputs.local == 'true' }}
     shell: bash
     run: pnpm run build
     env:
