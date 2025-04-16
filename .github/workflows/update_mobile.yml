@@ -1,9 +1,9 @@
 name: update_mobile
 
 on:
-  push:
-    branches:
-    - '*'
+  # push:
+  #   branches:
+  #   - '*'
 
   # repository_dispatch:
   #   types: [ build-remote ]
