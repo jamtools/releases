@@ -97,8 +97,8 @@ jobs:
         touch .env
         pnpm run build-desktop
       env:
-        PUBLIC_SITE_URL: 'https://qa.songdrive.app'
-        EXPO_PUBLIC_SITE_URL: 'https://qa.songdrive.app'
+        PUBLIC_SITE_URL: 'https://mike2.jam.tools'
+        EXPO_PUBLIC_SITE_URL: 'https://mike2.jam.tools'
         SENTRY_DSN: ''
 
     - name: Fetch Rust dependencies
