@@ -73,6 +73,6 @@ jobs:
       tauri_args: ${{ matrix.args }}
       tauri_target: ${{ matrix.tauri_target }}
       # pkg_target: ${{ matrix.pkg_target }}
-      sign_app: ${{ github.event.inputs.sign_app }}
+      sign_app: ${{ github.event.inputs.sign_app || false }}
       target_branch: desktop-online
       # ${{ env.TARGET_BRANCH }}
