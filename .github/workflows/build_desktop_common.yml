@@ -96,6 +96,10 @@ jobs:
       run: |
         touch .env
         pnpm run build-desktop
+      env:
+        PUBLIC_SITE_URL: 'https://qa.songdrive.app'
+        EXPO_PUBLIC_SITE_URL: 'https://qa.songdrive.app'
+        SENTRY_DSN: ''
 
     - name: Fetch Rust dependencies
       run: cargo fetch
