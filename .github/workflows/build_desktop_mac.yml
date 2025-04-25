@@ -68,6 +68,7 @@ jobs:
           #   pkg_target: 'node20-windows-x64'
 
     uses: ./.github/workflows/build_desktop_common.yml
+    secrets: inherit
     with:
       platform: ${{ matrix.platform }}
       tauri_args: ${{ matrix.args }}
@@ -76,4 +77,3 @@ jobs:
       sign_app: ${{ github.event.inputs.sign_app || false }}
       target_branch: desktop-online
       # target_branch: ${{ env.TARGET_BRANCH }}
-      repo-token: ${{ secrets.REPO_TOKEN }}
