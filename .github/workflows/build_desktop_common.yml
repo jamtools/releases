@@ -21,6 +21,9 @@ on:
       target_branch:
         required: true
         type: string
+      profile:
+        required: true
+        type: string
 
 jobs:
   build_tauri:
@@ -33,6 +36,7 @@ jobs:
         echo "tauri_target: ${{ inputs.tauri_target }}"
         echo "sign_app: ${{ inputs.sign_app }}"
         echo "target_branch: ${{ inputs.target_branch }}"
+        echo "profile: ${{ inputs.profile }}"
 
     - name: Checkout code
       uses: actions/checkout@v3
@@ -102,6 +106,13 @@ jobs:
         SENTRY_DSN: ''
         SPRINGBOARD_PLATFORM_VARIANT: desktop
 
+    # - name: Prebuild Tauri app
+    #   run: |
+    #     pnpm run prebuild
+    #   working-directory: ./apps/desktop_tauri
+    #   env:
+    #     APP_PROFILE: ${{ inputs.profile }}
+
     - name: Fetch Rust dependencies
       run: cargo fetch
       working-directory: ./apps/desktop_tauri/src-tauri
@@ -119,6 +130,7 @@ jobs:
     #     TAURI_TARGET: ${{ inputs.tauri_target }}
 
     - name: Set macOS signing environment variables
+      if: inputs.sign_app == true && inputs.platform == 'macos-latest'
       run: |
         if ${{ inputs.sign_app }}; then
           echo "APPLE_CERTIFICATE=${{ secrets.APPLE_CERTIFICATE }}" >> $GITHUB_ENV
@@ -143,11 +155,8 @@ jobs:
         # prerelease: false
         args: ${{ inputs.tauri_args }}
 
-        # - name: Build Tauri application
-        #   run: npm run build
-        #   working-directory: ./apps/desktop_tauri
-
     - name: Archive built artifacts
+      shell: bash
       run: |
         # Find all `bundle` directories
         find ./apps/desktop_tauri/src-tauri/target -type d -name "bundle" | while read -r dir; do

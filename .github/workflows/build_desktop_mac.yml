@@ -23,15 +23,15 @@ on:
         required: true
         type: boolean
         default: true
-      # profile:
-      #   description: Build profile (preview/development/production)
-      #   type: choice
-      #   required: true
-      #   default: preview
-      #   options:
-      #   - preview
-      #   - development
-      #   - production
+      profile:
+        description: Build profile (preview/development/production)
+        type: choice
+        required: true
+        default: preview
+        options:
+        - preview
+        - development
+        - production
       # submit:
       #   description: Auto submit to the store? (production only)
       #   type: boolean
@@ -77,3 +77,4 @@ jobs:
       sign_app: ${{ github.event.inputs.sign_app || false }}
       target_branch: desktop-online
       # target_branch: ${{ env.TARGET_BRANCH }}
+      profile: ${{ github.event.inputs.profile || 'development' }}
