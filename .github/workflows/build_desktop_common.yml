@@ -53,9 +53,6 @@ jobs:
       with:
         version: 9.13.2
 
-    - name: List directory contents
-      run: ls -la && cat README.md
-
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
@@ -71,26 +68,26 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-    - name: Scaffold Tauri app
-      run: npx create-tauri-app@4.5.9 songdrive -- --template vanilla --yes
-      working-directory: ./apps
+    # - name: Scaffold Tauri app
+    #   run: npx create-tauri-app@4.5.9 songdrive -- --template vanilla --yes
+    #   working-directory: ./apps
 
-    - name: Remove and move directories (Windows)
-      if: ${{ inputs.platform == 'windows-latest' }}
-      run: |
-        Remove-Item -Recurse -Force apps\desktop_tauri
-        Move-Item apps\songdrive apps\desktop_tauri
-      shell: pwsh
+    # - name: Remove and move directories (Windows)
+    #   if: ${{ inputs.platform == 'windows-latest' }}
+    #   run: |
+    #     Remove-Item -Recurse -Force apps\desktop_tauri
+    #     Move-Item apps\songdrive apps\desktop_tauri
+    #   shell: pwsh
 
-    - name: Remove and move directories (Unix)
-      if: ${{ inputs.platform != 'windows-latest' }}
-      run: |
-        rm -rf apps/desktop_tauri && mv apps/songdrive apps/desktop_tauri
-      shell: bash
+    # - name: Remove and move directories (Unix)
+    #   if: ${{ inputs.platform != 'windows-latest' }}
+    #   run: |
+    #     rm -rf apps/desktop_tauri && mv apps/songdrive apps/desktop_tauri
+    #   shell: bash
 
-    - name: Patch Tauri app directory with config values
-      run: ../../packages/springboard/platforms/tauri/scripts/update_desktop_project.sh
-      working-directory: ./apps/desktop_tauri
+    # - name: Patch Tauri app directory with config values
+    #   run: ../../packages/springboard/platforms/tauri/scripts/update_desktop_project.sh
+    #   working-directory: ./apps/desktop_tauri
 
     - name: Install project node modules
       run: pnpm i
