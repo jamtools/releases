@@ -95,11 +95,12 @@ jobs:
     - name: Build app
       run: |
         touch .env
-        pnpm run build-desktop
+        pnpm run build
       env:
         PUBLIC_SITE_URL: 'https://mike2.jam.tools'
         EXPO_PUBLIC_SITE_URL: 'https://mike2.jam.tools'
         SENTRY_DSN: ''
+        SPRINGBOARD_PLATFORM_VARIANT: desktop
 
     - name: Fetch Rust dependencies
       run: cargo fetch
