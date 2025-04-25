@@ -48,7 +48,6 @@ jobs:
     #     path: .github/composite-actions
     #     ref: ${{ github.sha }}
 
-    - uses: actions/checkout@v3
     - name: Install pnpm
       uses: pnpm/action-setup@v4
       with:
