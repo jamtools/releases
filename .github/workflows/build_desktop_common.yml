@@ -41,17 +41,22 @@ jobs:
         token: ${{ secrets.REPO_TOKEN }}
         ref: ${{ inputs.target_branch }}
 
-    - name: Checkout songdrive-releases repo into `.github/composite-actions`
-      uses: actions/checkout@v3
-      with:
-        repository: jamtools/songdrive-releases
-        path: .github/composite-actions
-        ref: ${{ github.sha }}
+    # - name: Checkout songdrive-releases repo into `.github/composite-actions`
+    #   uses: actions/checkout@v3
+    #   with:
+    #     repository: jamtools/songdrive-releases
+    #     path: .github/composite-actions
+    #     ref: ${{ github.sha }}
+
     - uses: actions/checkout@v3
     - name: Install pnpm
       uses: pnpm/action-setup@v4
       with:
         version: 9.13.2
+
+    - name: List directory contents
+      run: ls -la
+
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
