@@ -106,12 +106,12 @@ jobs:
         SENTRY_DSN: ''
         SPRINGBOARD_PLATFORM_VARIANT: desktop
 
-    # - name: Prebuild Tauri app
-    #   run: |
-    #     pnpm run prebuild
-    #   working-directory: ./apps/desktop_tauri
-    #   env:
-    #     APP_PROFILE: ${{ inputs.profile }}
+    - name: Prebuild Tauri app
+      run: |
+        pnpm run prebuild
+      working-directory: ./apps/desktop_tauri
+      env:
+        APP_PROFILE: ${{ inputs.profile }}
 
     - name: Fetch Rust dependencies
       run: cargo fetch
