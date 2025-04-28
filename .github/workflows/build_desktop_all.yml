@@ -1,12 +1,12 @@
-name: Desktop Build Default Platform
+name: Desktop Build All Platforms
 
 on:
   # push:
   #   branches:
   #   - '*'
 
-  repository_dispatch:
-    types: [ build-remote ]
+  # repository_dispatch:
+  #   types: [ build-remote ]
 
   workflow_dispatch:
     inputs:
@@ -46,18 +46,18 @@ jobs:
             args: '--target aarch64-apple-darwin'
             tauri_target: 'aarch64-apple-darwin'
             # pkg_target: 'node20-macos-arm64'
-          # - platform: 'macos-latest'
-          #   args: '--target x86_64-apple-darwin'
-          #   tauri_target: 'x86_64-apple-darwin'
-          #   # pkg_target: 'node20-macos-x64'
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+            tauri_target: 'x86_64-apple-darwin'
+            # pkg_target: 'node20-macos-x64'
           # - platform: 'ubuntu-22.04'
           #   args: ''
           #   tauri_target: ''
           #   # pkg_target: 'node20-linux-x64'
-          # - platform: 'windows-latest'
-          #   args: ''
-          #   tauri_target: ''
-          #   # pkg_target: 'node20-windows-x64'
+          - platform: 'windows-latest'
+            args: ''
+            tauri_target: ''
+            # pkg_target: 'node20-windows-x64'
 
     uses: ./.github/workflows/build_desktop_common.yml
     secrets: inherit
