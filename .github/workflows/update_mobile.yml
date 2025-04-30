@@ -36,6 +36,10 @@ on:
         description: Update message (e.g., "Bug fixes and improvements")
         type: string
         required: true
+      site_url:
+        description: 'Site URL'
+        default: https://qa.songdrive.app
+        required: true
 
 env:
   TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref || github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha || 'main' }}
@@ -70,3 +74,4 @@ jobs:
         platform: ${{ inputs.platform || 'ios' }}
         profile: ${{ inputs.profile || 'preview' }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
+        site_url: ${{ inputs.site_url }}

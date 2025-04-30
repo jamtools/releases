@@ -11,6 +11,9 @@ inputs:
   profile:
     description: 'EAS build profile (preview/development/production)'
     required: true
+  site_url:
+    description: 'Site URL'
+    required: true
 
 runs:
   using: 'composite'
@@ -47,6 +50,8 @@ runs:
     run: pnpm run build
     env:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
 
   - name: Send update to eas
     shell: bash
