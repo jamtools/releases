@@ -43,6 +43,7 @@ on:
 env:
   TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref || github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha || 'main' }}
   SITE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.site_url || github.event_name == 'repository_dispatch' && github.event.client_payload.site_url }}
+  PROFILE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.profile || github.event_name == 'repository_dispatch' && github.event.client_payload.profile }}
 
 jobs:
   mobile:
@@ -72,7 +73,7 @@ jobs:
     - name: Update Mobile App with EAS
       uses: ./.github/composite-actions/.github/actions/update_mobile_eas
       with:
-        platform: ${{ inputs.platform || 'ios' }}
-        profile: ${{ inputs.profile || 'preview' }}
+        platform: ${{ inputs.platform || 'all' }}
+        profile: ${{ env.PROFILE }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
         site_url: ${{ env.SITE_URL }}
