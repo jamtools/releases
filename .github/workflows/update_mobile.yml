@@ -5,8 +5,8 @@ on:
   #   branches:
   #   - '*'
 
-  # repository_dispatch:
-  #   types: [ build-remote ]
+  repository_dispatch:
+    types: [ new-commit-on-main ]
 
   workflow_dispatch:
     inputs:
@@ -38,11 +38,11 @@ on:
         required: true
       site_url:
         description: 'Site URL'
-        default: https://qa.songdrive.app
         required: true
 
 env:
   TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref || github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha || 'main' }}
+  SITE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.site_url || github.event_name == 'repository_dispatch' && github.event.client_payload.site_url }}
 
 jobs:
   mobile:
@@ -54,6 +54,7 @@ jobs:
         echo "profile: ${{ github.event.inputs.profile }}"
         echo "ref: ${{ github.event.inputs.ref }}"
         echo "TARGET_BRANCH: ${{ env.TARGET_BRANCH }}"
+        echo "SITE_URL: ${{ env.SITE_URL }}"
     - name: Checkout code
       uses: actions/checkout@v3
       with:
@@ -74,4 +75,4 @@ jobs:
         platform: ${{ inputs.platform || 'ios' }}
         profile: ${{ inputs.profile || 'preview' }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
-        site_url: ${{ inputs.site_url }}
+        site_url: ${{ env.SITE_URL }}
