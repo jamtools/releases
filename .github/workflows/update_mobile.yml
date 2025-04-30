@@ -49,13 +49,13 @@ jobs:
         echo "platform: ${{ github.event.inputs.platform }}"
         echo "profile: ${{ github.event.inputs.profile }}"
         echo "ref: ${{ github.event.inputs.ref }}"
-        echo "TARGET_BRANCH: mobile-app-rpc (hardcoded)"
+        echo "TARGET_BRANCH: ${{ env.TARGET_BRANCH }}"
     - name: Checkout code
       uses: actions/checkout@v3
       with:
         repository: ${{ secrets.REPO }}
         token: ${{ secrets.REPO_TOKEN }}
-        ref: mobile-app-rpc
+        ref: ${{ env.TARGET_BRANCH }}
 
     - name: Checkout songdrive-releases repo into `.github/composite-actions`
       uses: actions/checkout@v3
