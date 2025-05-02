@@ -54,6 +54,7 @@ runs:
     run: pnpm run build
     env:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
+      APP_PROFILE: ${{ inputs.profile }}
 
   - name: Prebuild expo app
     if: ${{ inputs.local == 'true' }}

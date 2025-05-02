@@ -52,6 +52,7 @@ runs:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
       PUBLIC_SITE_URL: ${{ inputs.site_url }}
       EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      APP_PROFILE: ${{ inputs.profile }}
 
   - name: Send update to eas
     shell: bash

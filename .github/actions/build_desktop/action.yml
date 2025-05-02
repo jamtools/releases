@@ -94,6 +94,7 @@ runs:
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
         SENTRY_DSN: ''
         SPRINGBOARD_PLATFORM_VARIANT: desktop
+        APP_PROFILE: ${{ inputs.profile }}
 
     - name: Prebuild Tauri app
       shell: bash
