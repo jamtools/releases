@@ -72,3 +72,4 @@ jobs:
         apple_id: ${{ secrets.APPLE_ID }}
         apple_password: ${{ secrets.APPLE_PASSWORD }}
         apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}

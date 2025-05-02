@@ -23,6 +23,9 @@ inputs:
   site_url:
     required: true
     description: 'Site URL'
+  github_token:
+    required: true
+    description: 'GitHub token'
   apple_certificate:
     required: false
     description: 'Apple certificate'
@@ -116,17 +119,17 @@ runs:
       if: inputs.sign_app == true && inputs.platform == 'macos-latest'
       run: |
         if ${{ inputs.sign_app }}; then
-          echo "APPLE_CERTIFICATE=${{ secrets.APPLE_CERTIFICATE }}" >> $GITHUB_ENV
-          echo "APPLE_CERTIFICATE_PASSWORD=${{ secrets.APPLE_CERTIFICATE_PASSWORD }}" >> $GITHUB_ENV
-          echo "APPLE_SIGNING_IDENTITY=${{ secrets.APPLE_SIGNING_IDENTITY }}" >> $GITHUB_ENV
-          echo "APPLE_ID=${{ secrets.APPLE_ID }}" >> $GITHUB_ENV
-          echo "APPLE_PASSWORD=${{ secrets.APPLE_PASSWORD }}" >> $GITHUB_ENV
-          echo "APPLE_TEAM_ID=${{ secrets.APPLE_TEAM_ID }}" >> $GITHUB_ENV
+          echo "APPLE_CERTIFICATE=${{ inputs.apple_certificate }}" >> $GITHUB_ENV
+          echo "APPLE_CERTIFICATE_PASSWORD=${{ inputs.apple_certificate_password }}" >> $GITHUB_ENV
+          echo "APPLE_SIGNING_IDENTITY=${{ inputs.apple_signing_identity }}" >> $GITHUB_ENV
+          echo "APPLE_ID=${{ inputs.apple_id }}" >> $GITHUB_ENV
+          echo "APPLE_PASSWORD=${{ inputs.apple_password }}" >> $GITHUB_ENV
+          echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
         fi
 
     - uses: tauri-apps/tauri-action@v0
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       with:
         projectPath: 'apps/desktop_tauri'
         includeDebug: true
