@@ -1,0 +1,159 @@
+name: Build Tauri App
+description: A composite action to build a Tauri app.
+
+inputs:
+  platform:
+    required: true
+    description: 'Platform to run on'
+  tauri_args:
+    required: true
+    description: 'Arguments for Tauri'
+  tauri_target:
+    required: true
+    description: 'Tauri build target'
+  sign_app:
+    required: true
+    description: 'Whether to sign the app'
+  target_branch:
+    required: true
+    description: 'Ref to use in application repo'
+  profile:
+    required: true
+    description: 'Build profile (preview/development/production)'
+  site_url:
+    required: true
+    description: 'Site URL'
+  apple_certificate:
+    required: false
+    description: 'Apple certificate'
+  apple_certificate_password:
+    required: false
+    description: 'Apple certificate password'
+  apple_signing_identity:
+    required: false
+    description: 'Apple signing identity'
+  apple_id:
+    required: false
+    description: 'Apple ID'
+  apple_password:
+    required: false
+    description: 'Apple password'
+  apple_team_id:
+    required: false
+    description: 'Apple team ID'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Log Action Inputs
+      shell: bash
+      run: |
+        echo "platform: ${{ inputs.platform }}"
+        echo "tauri_args: ${{ inputs.tauri_args }}"
+        echo "tauri_target: ${{ inputs.tauri_target }}"
+        echo "sign_app: ${{ inputs.sign_app }}"
+        echo "target_branch: ${{ inputs.target_branch }}"
+        echo "profile: ${{ inputs.profile }}"
+        echo "site_url: ${{ inputs.site_url }}"
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9.13.2
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+
+    - name: Install Rust stable
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install OS dependencies (ubuntu only)
+      shell: bash
+      if: inputs.platform == 'ubuntu-22.04'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+    - name: Install project node modules
+      shell: bash
+      run: pnpm i
+
+    - name: Build app
+      shell: bash
+      run: |
+        touch .env
+        pnpm run build
+      env:
+        PUBLIC_SITE_URL: ${{ inputs.site_url }}
+        EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+        SENTRY_DSN: ''
+        SPRINGBOARD_PLATFORM_VARIANT: desktop
+
+    - name: Prebuild Tauri app
+      shell: bash
+      run: |
+        pnpm run prebuild
+      working-directory: ./apps/desktop_tauri
+      env:
+        APP_PROFILE: ${{ inputs.profile }}
+
+    - name: Fetch Rust dependencies
+      shell: bash
+      run: cargo fetch
+      working-directory: ./apps/desktop_tauri/src-tauri
+
+    - name: Conditionally Install Rust Target (macOS)
+      shell: bash
+      if: inputs.platform == 'macos-latest'
+      run: |
+        rustup target add ${{ inputs.tauri_target }}
+
+    - name: Set macOS signing environment variables
+      shell: bash
+      if: inputs.sign_app == true && inputs.platform == 'macos-latest'
+      run: |
+        if ${{ inputs.sign_app }}; then
+          echo "APPLE_CERTIFICATE=${{ secrets.APPLE_CERTIFICATE }}" >> $GITHUB_ENV
+          echo "APPLE_CERTIFICATE_PASSWORD=${{ secrets.APPLE_CERTIFICATE_PASSWORD }}" >> $GITHUB_ENV
+          echo "APPLE_SIGNING_IDENTITY=${{ secrets.APPLE_SIGNING_IDENTITY }}" >> $GITHUB_ENV
+          echo "APPLE_ID=${{ secrets.APPLE_ID }}" >> $GITHUB_ENV
+          echo "APPLE_PASSWORD=${{ secrets.APPLE_PASSWORD }}" >> $GITHUB_ENV
+          echo "APPLE_TEAM_ID=${{ secrets.APPLE_TEAM_ID }}" >> $GITHUB_ENV
+        fi
+
+    - uses: tauri-apps/tauri-action@v0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        projectPath: 'apps/desktop_tauri'
+        includeDebug: true
+        includeRelease: true
+        # tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+        # releaseName: 'App v__VERSION__'
+        # releaseBody: 'See the assets to download this version and install.'
+        # releaseDraft: true
+        # prerelease: false
+        args: ${{ inputs.tauri_args }}
+
+    - name: Archive built artifacts
+      shell: bash
+      run: |
+        # Find all `bundle` directories
+        find ./apps/desktop_tauri/src-tauri/target -type d -name "bundle" | while read -r dir; do
+          # Extract the relative path starting after `target/`
+          RELATIVE_PATH="${dir#./apps/desktop_tauri/src-tauri/target/}"
+
+          # Copy the `bundle` directory to the corresponding artifacts folder
+          DEST_DIR="artifacts/${{ inputs.platform }}/$(dirname "$RELATIVE_PATH")"
+          mkdir -p "$DEST_DIR"
+          cp -r "$dir" "$DEST_DIR"
+        done
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tauri-build-${{ inputs.platform }}-${{ inputs.tauri_target }}
+        path: artifacts/${{ inputs.platform }}

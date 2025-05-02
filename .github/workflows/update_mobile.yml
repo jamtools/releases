@@ -41,9 +41,9 @@ on:
         required: true
 
 env:
-  TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref || github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha || 'main' }}
-  SITE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.site_url || github.event_name == 'repository_dispatch' && github.event.client_payload.site_url }}
-  PROFILE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.profile || github.event_name == 'repository_dispatch' && github.event.client_payload.profile }}
+  TARGET_BRANCH: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
+  SITE_URL: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
+  PROFILE: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.profile) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
 
 jobs:
   mobile:
@@ -52,7 +52,7 @@ jobs:
     - name: Log Workflow Inputs
       run: |
         echo "platform: ${{ github.event.inputs.platform }}"
-        echo "profile: ${{ github.event.inputs.profile }}"
+        echo "profile: ${{ env.PROFILE }}"
         echo "ref: ${{ github.event.inputs.ref }}"
         echo "TARGET_BRANCH: ${{ env.TARGET_BRANCH }}"
         echo "SITE_URL: ${{ env.SITE_URL }}"

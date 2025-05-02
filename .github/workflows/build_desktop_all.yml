@@ -1,12 +1,12 @@
-name: Desktop Build All Platforms
+name: Desktop Build Default Platform
 
 on:
   # push:
   #   branches:
   #   - '*'
 
-  # repository_dispatch:
-  #   types: [ build-remote ]
+  repository_dispatch:
+    types: [ new-commit-on-main ]
 
   workflow_dispatch:
     inputs:
@@ -24,17 +24,18 @@ on:
         - preview
         - development
         - production
-      # submit:
-      #   description: Auto submit to the store? (production only)
-      #   type: boolean
-      #   required: false
       ref:
         description: 'Ref to use in application repo'
         required: false
         default: 'main'
+      site_url:
+        description: 'Site URL'
+        required: true
 
 env:
   TARGET_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref || github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha || 'main' }}
+  SITE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.site_url || github.event_name == 'repository_dispatch' && github.event.client_payload.site_url }}
+  PROFILE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.profile || github.event_name == 'repository_dispatch' && github.event.client_payload.profile }}
 
 jobs:
   build_desktop_mac:
@@ -67,6 +68,6 @@ jobs:
       tauri_target: ${{ matrix.tauri_target }}
       # pkg_target: ${{ matrix.pkg_target }}
       sign_app: ${{ github.event.inputs.sign_app || false }}
-      target_branch: desktop-online
-      # target_branch: ${{ env.TARGET_BRANCH }}
-      profile: ${{ github.event.inputs.profile || 'development' }}
+      target_branch: ${{ env.TARGET_BRANCH }}
+      profile: ${{ env.PROFILE }}
+      site_url: ${{ env.SITE_URL }}
