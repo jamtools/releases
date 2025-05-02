@@ -16,10 +16,10 @@ on:
         type: boolean
         default: true
       profile:
-        description: Build profile (preview/development/production)
+        description: Build profile (development/preview/production)
         type: choice
         required: true
-        default: preview
+        default: development
         options:
         - preview
         - development
@@ -62,7 +62,7 @@ jobs:
       tauri_args: ${{ matrix.args }}
       tauri_target: ${{ matrix.tauri_target }}
       # pkg_target: ${{ matrix.pkg_target }}
-      sign_app: ${{ github.event.inputs.sign_app || false }}
+      sign_app: ${{ github.event.inputs.sign_app == 'true' }}
       target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
       profile: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.profile) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
