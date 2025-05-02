@@ -128,40 +128,45 @@ runs:
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
         fi
 
-    - name: Set Tauri log level
-      run: echo "TAURI_LOG=trace" >> $GITHUB_ENV
+    # - name: Set Tauri log level
+    #   run: echo "TAURI_LOG=trace" >> $GITHUB_ENV
+    #   shell: bash
+
+    - name: Build Tauri app
+      run: npx tauri build --verbose
+      working-directory: ./apps/desktop_tauri
       shell: bash
 
-    - uses: tauri-apps/tauri-action@v0
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      with:
-        projectPath: 'apps/desktop_tauri'
-        includeDebug: true
-        includeRelease: true
-        # tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-        # releaseName: 'App v__VERSION__'
-        # releaseBody: 'See the assets to download this version and install.'
-        # releaseDraft: true
-        # prerelease: false
-        args: ${{ inputs.tauri_args }}
+    # - uses: tauri-apps/tauri-action@v0
+    #   env:
+    #     GITHUB_TOKEN: ${{ inputs.github_token }}
+    #   with:
+    #     projectPath: 'apps/desktop_tauri'
+    #     includeDebug: true
+    #     includeRelease: true
+    #     # tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+    #     # releaseName: 'App v__VERSION__'
+    #     # releaseBody: 'See the assets to download this version and install.'
+    #     # releaseDraft: true
+    #     # prerelease: false
+    #     args: ${{ inputs.tauri_args }}
 
-    - name: Archive built artifacts
-      shell: bash
-      run: |
-        # Find all `bundle` directories
-        find ./apps/desktop_tauri/src-tauri/target -type d -name "bundle" | while read -r dir; do
-          # Extract the relative path starting after `target/`
-          RELATIVE_PATH="${dir#./apps/desktop_tauri/src-tauri/target/}"
+    # - name: Archive built artifacts
+    #   shell: bash
+    #   run: |
+    #     # Find all `bundle` directories
+    #     find ./apps/desktop_tauri/src-tauri/target -type d -name "bundle" | while read -r dir; do
+    #       # Extract the relative path starting after `target/`
+    #       RELATIVE_PATH="${dir#./apps/desktop_tauri/src-tauri/target/}"
 
-          # Copy the `bundle` directory to the corresponding artifacts folder
-          DEST_DIR="artifacts/${{ inputs.platform }}/$(dirname "$RELATIVE_PATH")"
-          mkdir -p "$DEST_DIR"
-          cp -r "$dir" "$DEST_DIR"
-        done
+    #       # Copy the `bundle` directory to the corresponding artifacts folder
+    #       DEST_DIR="artifacts/${{ inputs.platform }}/$(dirname "$RELATIVE_PATH")"
+    #       mkdir -p "$DEST_DIR"
+    #       cp -r "$dir" "$DEST_DIR"
+    #     done
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: tauri-build-${{ inputs.platform }}-${{ inputs.tauri_target }}
-        path: artifacts/${{ inputs.platform }}
+    # - name: Upload build artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: tauri-build-${{ inputs.platform }}-${{ inputs.tauri_target }}
+    #     path: artifacts/${{ inputs.platform }}
