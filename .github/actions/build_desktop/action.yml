@@ -117,7 +117,7 @@ runs:
 
     - name: Set macOS signing environment variables
       shell: bash
-      if: inputs.sign_app == true && inputs.platform == 'macos-latest'
+      if: inputs.sign_app == 'true' && inputs.platform == 'macos-latest'
       run: |
         if ${{ inputs.sign_app }}; then
           echo "APPLE_CERTIFICATE=${{ inputs.apple_certificate }}" >> $GITHUB_ENV
