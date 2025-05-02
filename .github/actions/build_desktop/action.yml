@@ -128,6 +128,10 @@ runs:
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
         fi
 
+    - name: Set Tauri log level
+      run: echo "TAURI_LOG=trace" >> $GITHUB_ENV
+      shell: bash
+
     - uses: tauri-apps/tauri-action@v0
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
