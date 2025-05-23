@@ -56,9 +56,9 @@ runs:
 
   - name: Compute expo fingerprint
     uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
-    working-directory: apps/mobile
     with:
       profile: ${{ inputs.profile }}
+      working-directory: apps/mobile
 
   - name: Send update to eas
     shell: bash

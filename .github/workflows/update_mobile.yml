@@ -29,7 +29,7 @@ on:
         - development
         - production
       ref:
-        description: 'Ref to use in application repo (ignored for now)'
+        description: 'Ref to use in application repo'
         required: false
         default: 'main'
       message:
