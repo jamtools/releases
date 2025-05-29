@@ -130,7 +130,7 @@ runs:
     #   shell: bash
 
     - name: Build Tauri app
-      run: npx tauri build -- ${{ inputs.tauri_args }}
+      run: npm run tauri build -- ${{ inputs.tauri_args }}
       working-directory: ./apps/desktop_tauri
       shell: bash
 
