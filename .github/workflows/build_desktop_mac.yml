@@ -31,6 +31,11 @@ on:
       site_url:
         description: 'Site URL'
         required: true
+      run_on_self_hosted:
+        description: 'Run on self-hosted runner'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build_desktop_mac:
@@ -66,3 +71,4 @@ jobs:
       target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
       profile: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.profile) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
+      run_on_self_hosted: ${{ github.event.inputs.run_on_self_hosted == 'true' }}
