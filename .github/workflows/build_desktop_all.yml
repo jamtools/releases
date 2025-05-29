@@ -39,12 +39,13 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-            tauri_target: 'aarch64-apple-darwin'
+            args: '--target universal-apple-darwin'
+            tauri_target: 'universal-apple-darwin'
+            # tauri_target: 'aarch64-apple-darwin'
             # pkg_target: 'node20-macos-arm64'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-            tauri_target: 'x86_64-apple-darwin'
+          # - platform: 'macos-latest'
+          #   args: '--target x86_64-apple-darwin'
+          #   tauri_target: 'x86_64-apple-darwin'
             # pkg_target: 'node20-macos-x64'
           # - platform: 'ubuntu-22.04'
           #   args: ''
