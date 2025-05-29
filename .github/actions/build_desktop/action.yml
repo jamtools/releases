@@ -14,9 +14,6 @@ inputs:
   sign_app:
     required: true
     description: 'Whether to sign the app'
-  target_branch:
-    required: true
-    description: 'Ref to use in application repo'
   profile:
     required: true
     description: 'Build profile (preview/development/production)'
@@ -55,7 +52,6 @@ runs:
         echo "tauri_args: ${{ inputs.tauri_args }}"
         echo "tauri_target: ${{ inputs.tauri_target }}"
         echo "sign_app: ${{ inputs.sign_app }}"
-        echo "target_branch: ${{ inputs.target_branch }}"
         echo "profile: ${{ inputs.profile }}"
         echo "site_url: ${{ inputs.site_url }}"
 

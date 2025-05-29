@@ -51,7 +51,7 @@ jobs:
       with:
         repository: ${{ secrets.REPO }}
         token: ${{ secrets.REPO_TOKEN }}
-        ref: ${{ env.TARGET_BRANCH }}
+        ref: ${{ inputs.target_branch }}
 
     - name: Checkout releases repo into `.github/composite-actions`
       uses: actions/checkout@v3
@@ -67,7 +67,6 @@ jobs:
         tauri_args: ${{ inputs.tauri_args }}
         tauri_target: ${{ inputs.tauri_target }}
         sign_app: ${{ inputs.sign_app }}
-        target_branch: ${{ inputs.target_branch }}
         profile: ${{ inputs.profile }}
         site_url: ${{ inputs.site_url }}
         apple_certificate: ${{ secrets.APPLE_CERTIFICATE }}
