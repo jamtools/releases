@@ -63,10 +63,10 @@ jobs:
         token: ${{ secrets.REPO_TOKEN }}
         ref: ${{ env.TARGET_BRANCH }}
 
-    - name: Checkout songdrive-releases repo into `.github/composite-actions`
+    - name: Checkout releases repo into `.github/composite-actions`
       uses: actions/checkout@v3
       with:
-        repository: jamtools/songdrive-releases
+        repository: jamtools/releases
         path: .github/composite-actions
         ref: ${{ github.sha }}
 
