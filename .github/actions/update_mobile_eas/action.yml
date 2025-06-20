@@ -60,6 +60,11 @@ runs:
     with:
       profile: ${{ inputs.profile }}
       working-directory: apps/mobile
+    env:
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
 
   - name: Send update to eas
     shell: bash
@@ -67,3 +72,8 @@ runs:
     run: |
       LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
       eas update --non-interactive --channel=${{ (inputs.profile == 'production' && 'beta-production') || inputs.profile }} --message="$LATEST_COMMIT_MESSAGE" --environment=${{ (inputs.profile == 'production' && 'production') || 'preview' }} --platform=${{ inputs.platform }}
+    env:
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
