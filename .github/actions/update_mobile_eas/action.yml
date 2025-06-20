@@ -53,6 +53,7 @@ runs:
       PUBLIC_SITE_URL: ${{ inputs.site_url }}
       EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
       APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
 
   - name: Compute expo fingerprint
     uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
