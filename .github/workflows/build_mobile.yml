@@ -6,7 +6,7 @@ on:
   #   - '*'
 
   repository_dispatch:
-    types: [ build-remote ]
+    types: [ build-remote, new-commit-on-main ]
 
   workflow_dispatch:
     inputs:
