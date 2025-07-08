@@ -75,7 +75,7 @@ jobs:
       with:
         local: ${{ !inputs.run_on_eas }}
         platform: ${{ inputs.platform || 'android' }}
-        profile: ${{ inputs.profile || 'preview' }}
+        profile: ${{  inputs.profile || 'production' }}
         submit: ${{ inputs.submit }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
     # - name: Build Mobile App with Gradle

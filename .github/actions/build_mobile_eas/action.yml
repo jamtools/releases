@@ -55,12 +55,16 @@ runs:
     env:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
       APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
 
   - name: Compute expo fingerprint
     uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
     with:
       profile: ${{ inputs.profile }}
       working-directory: apps/mobile
+    env:
+      APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
 
   - name: Prebuild expo app
     if: ${{ inputs.local == 'true' }}
