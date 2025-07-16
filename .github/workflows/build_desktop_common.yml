@@ -31,6 +31,9 @@ on:
         required: false
         type: boolean
         default: false
+      publish_version:
+        required: false
+        type: string
 
 jobs:
   build_tauri:
@@ -77,6 +80,9 @@ jobs:
         apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
+      # I need to go through the compiled tauri apps, and look at the compiled folder structure
+      # and then extract the installable for the given platform
+      # and then upload it to artifacts and S3
     - name: Archive built artifacts
       shell: bash
       run: |
@@ -95,3 +101,13 @@ jobs:
       with:
         name: tauri-build-${{ inputs.platform }}-${{ inputs.tauri_target }}
         path: artifacts/${{ inputs.platform }}
+
+    - name: Upload build artifacts to S3 compatible
+      if: inputs.publish_version != ''
+      uses: shallwefootball/s3-upload-action@master
+      with:
+          aws_key_id: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
+          aws_bucket: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
+          source_dir: 'artifacts/${{ inputs.platform }}'
+          destination_dir: 'builds/desktop/${{ inputs.publish_version }}/${{ inputs.platform }}'
