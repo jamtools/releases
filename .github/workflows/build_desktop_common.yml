@@ -111,3 +111,4 @@ jobs:
           aws_bucket: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
           source_dir: 'artifacts/${{ inputs.platform }}'
           destination_dir: 'builds/desktop/${{ inputs.publish_version }}/${{ inputs.platform }}'
+          endpoint: 'https://s3.us-east-005.backblazeb2.com'
