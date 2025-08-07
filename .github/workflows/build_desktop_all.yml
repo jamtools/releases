@@ -33,7 +33,7 @@ on:
         required: true
 
 jobs:
-  build_desktop_mac:
+  build_desktop_all:
     strategy:
       fail-fast: false
       matrix:

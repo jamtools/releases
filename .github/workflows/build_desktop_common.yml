@@ -112,13 +112,123 @@ jobs:
       id: datetime
       run: echo "value=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
 
-    - name: Upload build artifacts to S3 compatible
+    - name: Extract and rename installer file
+      if: inputs.publish_version != ''
+      shell: bash
+      id: extract_installer
+      run: |
+        echo "Starting installer file extraction for platform: ${{ inputs.platform }}"
+        
+        # Function to sanitize filename for URL compatibility (replace spaces with underscores)
+        sanitize_filename() {
+          echo "$1" | sed 's/[[:space:]]/_/g'
+        }
+        
+        if [[ "${{ inputs.platform }}" == "macos-latest" || "${{ inputs.platform }}" == "macos-"* ]]; then
+          echo "Processing macOS platform..."
+          
+          # Find DMG file with priority order
+          DMG_FILE=$(find artifacts/${{ inputs.platform }} -name "*.dmg" | head -1)
+          
+          echo "Found DMG files:"
+          find artifacts/${{ inputs.platform }} -name "*.dmg" || echo "No DMG files found"
+          
+          if [[ -z "$DMG_FILE" ]]; then
+            echo "ERROR: No DMG file found in artifacts/${{ inputs.platform }}"
+            echo "Available files:"
+            find artifacts/${{ inputs.platform }} -type f || echo "No files found"
+            exit 1
+          fi
+          
+          echo "Selected DMG file: $DMG_FILE"
+          
+          # Extract and sanitize the original filename
+          ORIGINAL_FILENAME=$(basename "$DMG_FILE" .dmg)
+          SANITIZED_FILENAME=$(sanitize_filename "$ORIGINAL_FILENAME")
+          
+          # Create new filename: datetime_commithash_originalfilename_version.dmg
+          NEW_FILENAME="${{ steps.datetime.outputs.value }}_${{ steps.commit_hash.outputs.hash }}_${SANITIZED_FILENAME}_${{ inputs.publish_version }}.dmg"
+          
+          echo "Original filename: $ORIGINAL_FILENAME"
+          echo "Sanitized filename: $SANITIZED_FILENAME"
+          echo "Final filename: $NEW_FILENAME"
+          
+        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+          echo "Processing Windows platform..."
+          
+          # Find EXE file with priority order: setup files first, then any exe
+          EXE_FILE=$(find artifacts/${{ inputs.platform }} -name "*-setup.exe" | head -1)
+          if [[ -z "$EXE_FILE" ]]; then
+            EXE_FILE=$(find artifacts/${{ inputs.platform }} -name "*setup*.exe" | head -1)
+          fi
+          if [[ -z "$EXE_FILE" ]]; then
+            EXE_FILE=$(find artifacts/${{ inputs.platform }} -name "*.exe" | head -1)
+          fi
+          
+          echo "Found EXE files:"
+          find artifacts/${{ inputs.platform }} -name "*.exe" || echo "No EXE files found"
+          
+          if [[ -z "$EXE_FILE" ]]; then
+            echo "ERROR: No EXE file found in artifacts/${{ inputs.platform }}"
+            echo "Available files:"
+            find artifacts/${{ inputs.platform }} -type f || echo "No files found"
+            exit 1
+          fi
+          
+          echo "Selected EXE file: $EXE_FILE"
+          
+          # Extract and sanitize the original filename
+          ORIGINAL_FILENAME=$(basename "$EXE_FILE" .exe)
+          SANITIZED_FILENAME=$(sanitize_filename "$ORIGINAL_FILENAME")
+          
+          # Create new filename: datetime_commithash_originalfilename_version.exe
+          NEW_FILENAME="${{ steps.datetime.outputs.value }}_${{ steps.commit_hash.outputs.hash }}_${SANITIZED_FILENAME}_${{ inputs.publish_version }}.exe"
+          
+          echo "Original filename: $ORIGINAL_FILENAME"
+          echo "Sanitized filename: $SANITIZED_FILENAME"
+          echo "Final filename: $NEW_FILENAME"
+          
+        else
+          echo "ERROR: Unsupported platform: ${{ inputs.platform }}"
+          echo "Supported platforms: macos-latest, windows-latest (and variants)"
+          exit 1
+        fi
+        
+        # Create staging directory and copy file
+        echo "Creating staging directory..."
+        if ! mkdir -p staging; then
+          echo "ERROR: Failed to create staging directory"
+          exit 1
+        fi
+        
+        echo "Copying installer file to staging..."
+        if [[ -n "$DMG_FILE" ]]; then
+          SOURCE_FILE="$DMG_FILE"
+        else
+          SOURCE_FILE="$EXE_FILE"
+        fi
+        
+        if ! cp "$SOURCE_FILE" "staging/$NEW_FILENAME"; then
+          echo "ERROR: Failed to copy $SOURCE_FILE to staging/$NEW_FILENAME"
+          exit 1
+        fi
+        
+        echo "Successfully created: staging/$NEW_FILENAME"
+        ls -la "staging/$NEW_FILENAME"
+        
+        # Set outputs
+        echo "installer_file=staging/$NEW_FILENAME" >> $GITHUB_OUTPUT
+        echo "filename=$NEW_FILENAME" >> $GITHUB_OUTPUT
+        
+        echo "Installer extraction completed successfully!"
+
+    - name: Upload installer to S3 compatible
       if: inputs.publish_version != ''
       uses: shallwefootball/s3-upload-action@master
       with:
           aws_key_id: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
           aws_secret_access_key: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
           aws_bucket: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
-          source_dir: 'artifacts/${{ inputs.platform }}'
-          destination_dir: 'builds/desktop/SongDrive_${{ steps.datetime.outputs.value }}_${{ inputs.publish_version }}_${{ steps.commit_hash.outputs.hash }}_${{ inputs.platform }}'
+          source_dir: 'staging'
+          destination_dir: 'builds/desktop'
           endpoint: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
