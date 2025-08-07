@@ -103,10 +103,12 @@ jobs:
         path: artifacts/${{ inputs.platform }}
 
     - name: Get short commit hash
+      shell: bash
       id: commit_hash
       run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
     - name: Get current datetime
+      shell: bash
       id: datetime
       run: echo "value=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
 
