@@ -120,5 +120,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
           aws_bucket: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
           source_dir: 'artifacts/${{ inputs.platform }}'
-          destination_dir: 'builds/desktop/SongDrive_${{ inputs.publish_version }}_${{ steps.datetime.outputs.value }}_${{ steps.commit_hash.outputs.hash }}_${{ inputs.platform }}'
+          destination_dir: 'builds/desktop/SongDrive_${{ steps.datetime.outputs.value }}_${{ inputs.publish_version }}_${{ steps.commit_hash.outputs.hash }}_${{ inputs.platform }}'
           endpoint: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
