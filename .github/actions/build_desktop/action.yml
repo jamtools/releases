@@ -84,12 +84,11 @@ runs:
       shell: bash
       run: |
         touch .env
-        pnpm run build
+        pnpm run build-desktop
       env:
         PUBLIC_SITE_URL: ${{ inputs.site_url }}
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
         SENTRY_DSN: ''
-        SPRINGBOARD_PLATFORM_VARIANT: desktop
         APP_PROFILE: ${{ inputs.profile }}
 
     - name: Prebuild Tauri app
