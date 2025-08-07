@@ -102,6 +102,14 @@ jobs:
         name: tauri-build-${{ inputs.platform }}-${{ inputs.tauri_target }}
         path: artifacts/${{ inputs.platform }}
 
+    - name: Get short commit hash
+      id: commit_hash
+      run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Get current datetime
+      id: datetime
+      run: echo "value=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_OUTPUT
+
     - name: Upload build artifacts to S3 compatible
       if: inputs.publish_version != ''
       uses: shallwefootball/s3-upload-action@master
@@ -110,5 +118,5 @@ jobs:
           aws_secret_access_key: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
           aws_bucket: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
           source_dir: 'artifacts/${{ inputs.platform }}'
-          destination_dir: 'builds/desktop/${{ inputs.publish_version }}/${{ inputs.platform }}'
-          endpoint: 'https://s3.us-east-005.backblazeb2.com'
+          destination_dir: 'builds/desktop/SongDrive_${{ inputs.publish_version }}_${{ steps.datetime.outputs.value }}_${{ steps.commit_hash.outputs.hash }}_${{ inputs.platform }}'
+          endpoint: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
