@@ -31,6 +31,10 @@ on:
       site_url:
         description: 'Site URL'
         required: true
+      publish_version:
+        description: 'Publish version'
+        required: false
+        type: string
 
 jobs:
   build_desktop_all:
@@ -67,4 +71,4 @@ jobs:
       target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
       profile: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.profile) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
-      publish_version: 0.2.0
+      publish_version: ${{ github.event.inputs.publish_version || '0.2.0' }}
