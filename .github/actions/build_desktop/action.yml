@@ -41,6 +41,9 @@ inputs:
   apple_team_id:
     required: false
     description: 'Apple team ID'
+  enable_debug:
+    required: false
+    description: 'Enable debug'
 
 runs:
   using: 'composite'
@@ -54,6 +57,7 @@ runs:
         echo "sign_app: ${{ inputs.sign_app }}"
         echo "profile: ${{ inputs.profile }}"
         echo "site_url: ${{ inputs.site_url }}"
+        echo "enable_debug: ${{ inputs.enable_debug }}"
 
     - name: Install pnpm
       uses: pnpm/action-setup@v4
@@ -130,7 +134,7 @@ runs:
     #   shell: bash
 
     - name: Build Tauri app
-      run: npm run tauri build -- ${{ inputs.tauri_args }}
+      run: npm run tauri build -- ${{ inputs.tauri_args }} ${{ (inputs.enable_debug && '--debug') || '' }}
       working-directory: ./apps/desktop_tauri
       shell: bash
 
