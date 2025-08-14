@@ -24,6 +24,10 @@ on:
         - preview
         - development
         - production
+      custom_profile:
+        description: 'Custom build profile'
+        type: string
+        required: false
       ref:
         description: 'Ref to use in application repo'
         required: false
@@ -74,7 +78,7 @@ jobs:
       # pkg_target: ${{ matrix.pkg_target }}
       sign_app: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.sign_app == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
       target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
-      profile: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.profile) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
+      profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
       publish_version: ${{ github.event.inputs.publish_version || '0.2.0' }}
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
