@@ -17,6 +17,9 @@ inputs:
   local:
     description: 'Build the app locally in CI'
     required: false
+  asc_app_id:
+    description: 'ASC app ID'
+    required: false
 
 runs:
   using: 'composite'
@@ -91,5 +94,5 @@ runs:
     if: ${{ inputs.submit == 'true' && inputs.profile == 'production' }}
     working-directory: apps/mobile
     env:
-      ASC_APP_ID: ${{ secrets.ASC_APP_ID }}
+      ASC_APP_ID: ${{ inputs.asc_app_id }}
     run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} 1>/dev/null
