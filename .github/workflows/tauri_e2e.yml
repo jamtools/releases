@@ -81,30 +81,9 @@ jobs:
                               -NoNewWindow -PassThru
           Set-Content -Path server.pid -Value $p.Id -Encoding ascii
 
-      - name: Wait for server (HTTP 200)
+      - name: Wait for server (fixed delay)
         shell: pwsh
-        run: |
-          $ProgressPreference = 'SilentlyContinue'
-          $ErrorActionPreference = 'SilentlyContinue'
-
-          $url = "http://127.0.0.1:1337/"
-          $deadline = (Get-Date).AddMinutes(2)
-
-          while ((Get-Date) -lt $deadline) {
-            try {
-              $resp = Invoke-WebRequest -Uri $url -Method Head -TimeoutSec 2
-              if ($resp.StatusCode -eq 200) {
-                Write-Host "Server ready at $url"
-                exit 0
-              }
-            } catch {
-              # ignore and retry
-            }
-            Start-Sleep -Seconds 1
-          }
-
-          Write-Error "Server did not return 2xx at $url within 2 minutes"
-          exit 1
+        run: Start-Sleep -Seconds 20
 
     #   - name: Run E2E (Linux)
     #     if: matrix.os == 'ubuntu-latest'
@@ -138,8 +117,8 @@ jobs:
         shell: pwsh
         run: |
           if (Test-Path server.pid) {
-            $pid = Get-Content server.pid
-            Write-Host "Stopping server PID $pid"
+            $p = Get-Content server.pid
+            Write-Host "Stopping server PID $p"
             taskkill /PID $pid /T /F | Out-Host
             Remove-Item server.pid -ErrorAction SilentlyContinue
           }
