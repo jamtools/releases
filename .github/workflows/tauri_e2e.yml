@@ -73,12 +73,38 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y webkit2gtk-driver xvfb libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
 
-      - name: Start app server
+      - name: Start app server (Windows)
+        shell: pwsh
         run: |
-          npm start & echo $! > server.pid
+          $p = Start-Process -FilePath "npm.cmd" -ArgumentList "start" `
+                              -WorkingDirectory "${{ github.workspace }}" `
+                              -NoNewWindow -PassThru
+          Set-Content -Path server.pid -Value $p.Id -Encoding ascii
 
-      - name: Wait for server
-        run: npx --yes wait-on tcp:127.0.0.1:1337
+      - name: Wait for server (HTTP 200)
+        shell: pwsh
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          $ErrorActionPreference = 'SilentlyContinue'
+
+          $url = "http://127.0.0.1:1337/"
+          $deadline = (Get-Date).AddMinutes(2)
+
+          while ((Get-Date) -lt $deadline) {
+            try {
+              $resp = Invoke-WebRequest -Uri $url -Method Head -TimeoutSec 2
+              if ($resp.StatusCode -eq 200) {
+                Write-Host "Server ready at $url"
+                exit 0
+              }
+            } catch {
+              # ignore and retry
+            }
+            Start-Sleep -Seconds 1
+          }
+
+          Write-Error "Server did not return 2xx at $url within 2 minutes"
+          exit 1
 
     #   - name: Run E2E (Linux)
     #     if: matrix.os == 'ubuntu-latest'
@@ -107,10 +133,13 @@ jobs:
         env:
           DISABLE_SERVER_RUN: true
 
-      - name: Stop app server
+      - name: Stop app server (Windows)
         if: always()
+        shell: pwsh
         run: |
-            if [ -f server.pid ]; then
-            kill -TERM "$(cat server.pid)" || true
-            rm -f server.pid
-            fi
+          if (Test-Path server.pid) {
+            $pid = Get-Content server.pid
+            Write-Host "Stopping server PID $pid"
+            taskkill /PID $pid /T /F | Out-Host
+            Remove-Item server.pid -ErrorAction SilentlyContinue
+          }
