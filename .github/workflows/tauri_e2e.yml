@@ -15,7 +15,19 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ secrets.REPO }}
+          token: ${{ secrets.REPO_TOKEN }}
+          ref: tauri-e2e
+
+      - name: Checkout releases repo into `.github/composite-actions`
+        uses: actions/checkout@v3
+        with:
+          repository: jamtools/releases
+          path: .github/composite-actions
+          ref: ${{ github.sha }}
 
       # ---- Rust (for tauri + tauri-driver) ----
       - uses: dtolnay/rust-toolchain@stable
@@ -25,21 +37,24 @@ jobs:
         with:
           workspaces: src-tauri
 
-      # ---- Node (runner your tests) ----
-      - uses: actions/setup-node@v4
+      - name: Build Tauri App
+        uses: ./.github/composite-actions/.github/actions/build_desktop
         with:
-          node-version: 20
-        #   cache: 'pnpm'
-
-    #   - name: Install pnpm
-    #     run: npm -g i pnpm@10
-
-    #   - name: Install app deps
-    #     run: pnpm install
-
-    #   - name: Install e2e deps
-    #     run: pnpm install
-    #     working-directory: e2e-tests
+            platform: ${{ matrix.os == 'ubuntu-latest' && 'ubuntu-22.04' || 'windows-latest' }}
+            tauri_args: ''
+            tauri_target: ''
+            sign_app: false
+            profile: production
+            site_url: http://localhost:1337
+            apple_certificate: ${{ secrets.APPLE_CERTIFICATE }}
+            apple_certificate_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+            apple_signing_identity: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+            apple_id: ${{ secrets.APPLE_ID }}
+            apple_password: ${{ secrets.APPLE_PASSWORD }}
+            apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            enable_debug: true
+            # enable_debug: ${{ inputs.enable_debug }}
 
       # ---- tauri-driver (shared) ----
       - name: Install tauri-driver
