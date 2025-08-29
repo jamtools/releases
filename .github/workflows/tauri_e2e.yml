@@ -1,6 +1,10 @@
 # .github/workflows/tauri-e2e.yml
 name: Tauri WebDriver E2E
-on: [push, pull_request]
+on:
+    pull_request:
+    push:
+        branches:
+            - "*"
 
 jobs:
   e2e:
@@ -25,7 +29,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+        #   cache: 'pnpm'
 
     #   - name: Install pnpm
     #     run: npm -g i pnpm@10
