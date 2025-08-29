@@ -11,7 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
+        # os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -56,6 +57,10 @@ jobs:
             enable_debug: true
             # enable_debug: ${{ inputs.enable_debug }}
 
+      - name: Install Tauri e2e dependencies
+        working-directory: tauri-e2e
+        run: npm i
+
       # ---- tauri-driver (shared) ----
       - name: Install tauri-driver
         run: cargo install tauri-driver --locked
@@ -87,6 +92,7 @@ jobs:
       #     curl -L -o webview2.exe https://go.microsoft.com/fwlink/p/?LinkId=2124703
       #     .\webview2.exe /silent /install
 
-    #   - name: Run E2E (Windows)
-    #     if: matrix.os == 'windows-latest'
-    #     run: pnpm -C e2e-tests test
+      - name: Run E2E (Windows)
+        if: matrix.os == 'windows-latest'
+        working-directory: tauri-e2e
+        run: npm test
