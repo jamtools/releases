@@ -87,15 +87,12 @@ runs:
       shell: bash
       run: pnpm i
 
-    - name: Load env file into runner
-      shell: pwsh
+    - name: Populate e2e env vars
+      shell: bash
       if: inputs.build_e2e
       run: |
-        Get-Content ./tests-e2e/.env.tests-e2e | ForEach-Object {
-          if ($_ -match '^export\s+([^=]+)=(.*)$') {
-            "$($matches[1])=$($matches[2])" >> $env:GITHUB_ENV
-          }
-        }
+        npm install -g dotenv-cli
+        dotenv -e ./tests-e2e/.env.tests-e2e -- printenv | tee -a $GITHUB_ENV
 
     - name: Build app
       shell: bash
