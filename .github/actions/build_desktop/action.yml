@@ -91,7 +91,7 @@ runs:
       shell: bash
       run: |
         touch .env
-        pnpm run {{ inputs.build_e2e ? 'build-e2e ' : 'build-desktop' }}
+        pnpm run ${{ (inputs.build_e2e && 'build-e2e') || 'build-desktop' }}
       env:
         PUBLIC_SITE_URL: ${{ inputs.site_url }}
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
