@@ -78,7 +78,7 @@ jobs:
           npm start & echo $! > server.pid
 
       - name: Wait for server
-        run: npx --yes wait-on tcp:127.0.0.1:5173
+        run: npx --yes wait-on tcp:127.0.0.1:1337
 
     #   - name: Run E2E (Linux)
     #     if: matrix.os == 'ubuntu-latest'
