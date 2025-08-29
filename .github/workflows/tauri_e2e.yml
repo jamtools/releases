@@ -73,6 +73,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y webkit2gtk-driver xvfb libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
 
+      - name: Start app server
+        run: |
+          npm start & echo $! > server.pid
+
+      - name: Wait for server
+        run: npx --yes wait-on tcp:127.0.0.1:5173
+
     #   - name: Run E2E (Linux)
     #     if: matrix.os == 'ubuntu-latest'
     #     run: xvfb-run pnpm -C e2e-tests test
@@ -97,3 +104,13 @@ jobs:
         if: matrix.os == 'windows-latest'
         working-directory: tauri-e2e
         run: npm test
+        env:
+          DISABLE_SERVER_RUN: true
+
+      - name: Stop app server
+        if: always()
+        run: |
+            if [ -f server.pid ]; then
+            kill -TERM "$(cat server.pid)" || true
+            rm -f server.pid
+            fi
