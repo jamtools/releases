@@ -87,11 +87,21 @@ runs:
       shell: bash
       run: pnpm i
 
+    - name: Load env file into runner
+      shell: pwsh
+      if: inputs.build_e2e
+      run: |
+        Get-Content ./tests-e2e/.env.tests-e2e | ForEach-Object {
+          if ($_ -match '^export\s+([^=]+)=(.*)$') {
+            "$($matches[1])=$($matches[2])" >> $env:GITHUB_ENV
+          }
+        }
+
     - name: Build app
       shell: bash
       run: |
         touch .env
-        pnpm run ${{ (inputs.build_e2e && 'build-e2e') || 'build-desktop' }}
+        pnpm run build-desktop
       env:
         PUBLIC_SITE_URL: ${{ inputs.site_url }}
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
