@@ -1,9 +1,6 @@
 name: Tauri WebDriver E2E
 on:
     pull_request:
-    push:
-        branches:
-            - "*"
     workflow_dispatch:
 
 jobs:
