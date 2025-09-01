@@ -99,12 +99,12 @@ runs:
       shell: bash
       run: pnpm i
 
-    - name: Populate e2e env vars
-      shell: bash
-      if: inputs.build_e2e
-      run: |
-        npm install -g dotenv-cli
-        dotenv -e ./tests-e2e/.env.tests-e2e -- printenv | tee -a $GITHUB_ENV
+    # - name: Populate e2e env vars
+    #   shell: bash
+    #   if: inputs.build_e2e
+    #   run: |
+    #     npm install -g dotenv-cli
+    #     dotenv -e ./tests-e2e/.env.tests-e2e -- printenv | tee -a $GITHUB_ENV
 
     - name: Build app
       shell: bash
