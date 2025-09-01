@@ -127,6 +127,7 @@ runs:
           echo "APPLE_ID=${{ inputs.apple_id }}" >> $GITHUB_ENV
           echo "APPLE_PASSWORD=${{ inputs.apple_password }}" >> $GITHUB_ENV
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
+          echo "MACOS_SANDBOXED=true" >> $GITHUB_ENV
         fi
 
     # - name: Set Tauri log level
