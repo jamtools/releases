@@ -99,12 +99,20 @@ runs:
       shell: bash
       run: pnpm i
 
-    # - name: Populate e2e env vars
-    #   shell: bash
-    #   if: inputs.build_e2e
-    #   run: |
-    #     npm install -g dotenv-cli
-    #     dotenv -e ./tests-e2e/.env.tests-e2e -- printenv | tee -a $GITHUB_ENV
+    - name: Populate e2e env vars (safe)
+      if: inputs.build_e2e
+      shell: bash
+      run: |
+        while IFS= read -r line; do
+          # skip blanks and comments
+          [ -z "$line" ] && continue
+          case "$line" in \#*) continue;; esac
+          key="${line%%=*}"
+          val="${line#*=}"
+          # protect critical vars
+          case "$key" in PATH|TMP|TEMP|TMPDIR) continue;; esac
+          echo "$key=$val" >> "$GITHUB_ENV"
+        done < ./tests-e2e/.env.tests-e2e
 
     - name: Build app
       shell: bash
