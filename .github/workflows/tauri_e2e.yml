@@ -27,7 +27,6 @@ jobs:
           path: .github/composite-actions
           ref: ${{ github.sha }}
 
-      # # ---- Rust (for tauri + tauri-driver) ----
       # - uses: dtolnay/rust-toolchain@stable
 
       # - name: Rust cache
