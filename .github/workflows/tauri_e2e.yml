@@ -1,73 +1,106 @@
-# .github/workflows/tauri-e2e.yml
 name: Tauri WebDriver E2E
-on: [push, pull_request]
+on:
+    pull_request:
+    workflow_dispatch:
 
 jobs:
   e2e:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
+        # os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
-
-      # ---- Rust (for tauri + tauri-driver) ----
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-          workspaces: src-tauri
+          repository: ${{ secrets.REPO }}
+          token: ${{ secrets.REPO_TOKEN }}
+          ref: tauri-e2e
 
-      # ---- Node (runner your tests) ----
-      - uses: actions/setup-node@v4
+      - name: Checkout releases repo into `.github/composite-actions`
+        uses: actions/checkout@v3
         with:
-          node-version: 20
-          cache: 'pnpm'
+          repository: jamtools/releases
+          path: .github/composite-actions
+          ref: ${{ github.sha }}
 
-    #   - name: Install pnpm
-    #     run: npm -g i pnpm@10
+      # - uses: dtolnay/rust-toolchain@stable
 
-    #   - name: Install app deps
-    #     run: pnpm install
+      # - name: Rust cache
+      #   uses: Swatinem/rust-cache@v2
+      #   with:
+      #     workspaces: src-tauri
 
-    #   - name: Install e2e deps
-    #     run: pnpm install
-    #     working-directory: e2e-tests
+      - name: Build Tauri App
+        uses: ./.github/composite-actions/.github/actions/build_desktop
+        with:
+            platform: ${{ matrix.os == 'ubuntu-latest' && 'ubuntu-22.04' || 'windows-latest' }}
+            tauri_args: ''
+            tauri_target: ''
+            sign_app: false
+            profile: production
+            site_url: http://localhost:1337
+            apple_certificate: ${{ secrets.APPLE_CERTIFICATE }}
+            apple_certificate_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+            apple_signing_identity: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+            apple_id: ${{ secrets.APPLE_ID }}
+            apple_password: ${{ secrets.APPLE_PASSWORD }}
+            apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            enable_debug: true
+            build_e2e: true
+            # enable_debug: ${{ inputs.enable_debug }}
+
+      - name: Install Tauri e2e dependencies
+        working-directory: tauri-e2e
+        shell: bash
+        run: npm i
 
       # ---- tauri-driver (shared) ----
       - name: Install tauri-driver
+        shell: bash
         run: cargo install tauri-driver --locked
 
       # ---- Linux-only bits: WebKit driver + xvfb ----
       - name: Linux system deps
         if: matrix.os == 'ubuntu-latest'
+        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y webkit2gtk-driver xvfb libwebkit2gtk-4.1-dev libayatana-appindicator3-dev
 
-    #   - name: Run E2E (Linux)
-    #     if: matrix.os == 'ubuntu-latest'
-    #     run: xvfb-run pnpm -C e2e-tests test
+      # - name: Run E2E (Linux)
+      #   if: matrix.os == 'ubuntu-latest'
+      #   shell: bash
+      #   run: xvfb-run pnpm -C e2e-tests test
 
       # ---- Windows-only bits: EdgeDriver + (optional) WebView2 runtime ----
       - name: Install matching EdgeDriver
         if: matrix.os == 'windows-latest'
+        shell: bash
         run: |
           cargo install --git https://github.com/chippers/msedgedriver-tool
-          "$HOME\.cargo\bin\msedgedriver-tool.exe" | Out-Host
-          echo "$PWD" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "$HOME/.cargo/bin/msedgedriver-tool.exe" | cat
+          echo "$PWD" >> "$GITHUB_PATH"
 
-      # Optional: ensure WebView2 Runtime (evergreen) exists on the runner
-      # (Windows Server images sometimes drift; uncomment if your app fails to create WebView2)
+      # Optional WebView2
       # - name: Install WebView2 Runtime (silent)
       #   if: matrix.os == 'windows-latest'
+      #   shell: bash
       #   run: |
       #     curl -L -o webview2.exe https://go.microsoft.com/fwlink/p/?LinkId=2124703
-      #     .\webview2.exe /silent /install
+      #     ./webview2.exe /silent /install
 
-    #   - name: Run E2E (Windows)
-    #     if: matrix.os == 'windows-latest'
-    #     run: pnpm -C e2e-tests test
+      - name: Run E2E via start-server-and-test
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          npx --yes start-server-and-test@2 \
+            "npm start" \
+            "http://localhost:1337" \
+            "npm --prefix tauri-e2e run test"
+        env:
+          DISABLE_SERVER_RUN: true

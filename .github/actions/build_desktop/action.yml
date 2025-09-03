@@ -44,6 +44,9 @@ inputs:
   enable_debug:
     required: false
     description: 'Enable debug'
+  build_e2e:
+    required: false
+    description: 'Build e2e app'
 
 runs:
   using: 'composite'
@@ -58,6 +61,18 @@ runs:
         echo "profile: ${{ inputs.profile }}"
         echo "site_url: ${{ inputs.site_url }}"
         echo "enable_debug: ${{ inputs.enable_debug }}"
+
+    - name: Normalize temp for bash + Node on Windows
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        mkdir -p /tmp
+
+        if [ -d /d ]; then mkdir -p /d/tmp || true; fi
+
+        echo "TMPDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+        echo "TEMP=$RUNNER_TEMP"   >> "$GITHUB_ENV"
+        echo "TMP=$RUNNER_TEMP"    >> "$GITHUB_ENV"
 
     - name: Install pnpm
       uses: pnpm/action-setup@v4
@@ -84,6 +99,21 @@ runs:
       shell: bash
       run: pnpm i
 
+    - name: Populate e2e env vars (safe)
+      if: inputs.build_e2e
+      shell: bash
+      run: |
+        while IFS= read -r line; do
+          # skip blanks and comments
+          [ -z "$line" ] && continue
+          case "$line" in \#*) continue;; esac
+          key="${line%%=*}"
+          val="${line#*=}"
+          # protect critical vars
+          case "$key" in PATH|TMP|TEMP|TMPDIR) continue;; esac
+          echo "$key=$val" >> "$GITHUB_ENV"
+        done < ./tests-e2e/.env.tests-e2e
+
     - name: Build app
       shell: bash
       run: |
@@ -93,7 +123,7 @@ runs:
         PUBLIC_SITE_URL: ${{ inputs.site_url }}
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
         SENTRY_DSN: ''
-        SPRINGBOARD_PLATFORM_VARIANT: desktop
+        SPRINGBOARD_PLATFORM_VARIANT: desktop,main
         APP_PROFILE: ${{ inputs.profile }}
 
     - name: Prebuild Tauri app
