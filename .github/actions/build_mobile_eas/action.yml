@@ -87,7 +87,7 @@ runs:
     shell: bash
     if: ${{ inputs.local != 'true' && (inputs.submit != 'true' || inputs.profile != 'production') }}
     working-directory: apps/mobile
-    run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
+    run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} 1>/dev/null
 
   - name: Build & submit mobile
     shell: bash
@@ -95,4 +95,4 @@ runs:
     working-directory: apps/mobile
     env:
       ASC_APP_ID: ${{ inputs.asc_app_id }}
-    run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
+    run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} 1>/dev/null
