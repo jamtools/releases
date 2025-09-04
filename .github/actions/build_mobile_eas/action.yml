@@ -47,6 +47,7 @@ runs:
     with:
       eas-version: latest
       token: ${{ inputs.expo-token }}
+      packager: pnpm
 
   - name: Install modules
     shell: bash
