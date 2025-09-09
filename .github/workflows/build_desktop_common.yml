@@ -249,7 +249,14 @@ jobs:
       id: get_commit_message
       shell: bash
       run: |
-        echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+        # Get only the first line of the commit message
+        COMMIT_MSG=$(git log -1 --pretty=%B | head -n1)
+        # Use delimiter syntax for proper escaping of special characters
+        {
+          echo "commit_message<<EOF"
+          echo "$COMMIT_MSG"
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
 
     - name: Send message
       uses: appleboy/discord-action@v1.2.0
