@@ -258,8 +258,12 @@ jobs:
           echo "EOF"
         } >> $GITHUB_OUTPUT
 
-    - name: Send message
-      uses: appleboy/discord-action@v1.2.0
-      with:
-        webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
-        message: Check out the new desktop build ${{ steps.calculate_url.outputs.installer_url }}. ${{ steps.get_commit_message.outputs.commit_message }}
+    - name: Send Discord message
+      shell: bash
+      run: |
+        # Build JSON payload with proper escaping
+        jq -n \
+          --arg url "${{ steps.calculate_url.outputs.installer_url }}" \
+          --arg commit "${{ steps.get_commit_message.outputs.commit_message }}" \
+          '{"content": "Check out the new desktop build \($url). \($commit)"}' | \
+        curl -X POST -H "Content-Type: application/json" -d @- "${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}"
