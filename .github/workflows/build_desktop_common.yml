@@ -240,12 +240,14 @@ jobs:
           endpoint: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
 
     - name: Calculate desktop build download URL
+      if: inputs.publish_version != ''
       id: calculate_url
       shell: bash
       run: |
         echo "installer_url=${{ secrets.R2_DESKTOP_BUILDS_PUBLIC_URL }}/builds/desktop/${{ steps.extract_installer.outputs.filename }}" >> $GITHUB_OUTPUT
 
     - name: Get latest commit message
+      if: inputs.publish_version != ''
       id: get_commit_message
       shell: bash
       run: |
@@ -259,11 +261,21 @@ jobs:
         } >> $GITHUB_OUTPUT
 
     - name: Send Discord message
+      if: inputs.publish_version != ''
       shell: bash
       run: |
-        # Build JSON payload with proper escaping
+        # Determine platform name for Discord message
+        if [[ "${{ inputs.platform }}" == "macos-latest" || "${{ inputs.platform }}" == "macos-"* ]]; then
+          PLATFORM_NAME="macOS"
+        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+          PLATFORM_NAME="Windows"
+        else
+          PLATFORM_NAME="${{ inputs.platform }}"
+        fi
+
         jq -n \
+          --arg platform "$PLATFORM_NAME" \
           --arg url "${{ steps.calculate_url.outputs.installer_url }}" \
           --arg commit "${{ steps.get_commit_message.outputs.commit_message }}" \
-          '{"content": "Check out the new desktop build \($url). \($commit)"}' | \
+          '{"content": "Check out the new \($platform) desktop build \($url). \($commit)"}' | \
         curl -X POST -H "Content-Type: application/json" -d @- "${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}"
