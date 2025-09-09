@@ -238,3 +238,21 @@ jobs:
           source_dir: 'staging'
           destination_dir: 'builds/desktop'
           endpoint: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
+
+    - name: Calculate desktop build download URL
+      id: calculate_url
+      shell: bash
+      run: |
+        echo "installer_url=${{ secrets.R2_DESKTOP_BUILDS_PUBLIC_URL }}/builds/desktop/${{ steps.extract_installer.outputs.filename }}" >> $GITHUB_OUTPUT
+
+    - name: Get latest commit message
+      id: get_commit_message
+      shell: bash
+      run: |
+        echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT"
+
+    - name: Send message
+      uses: appleboy/discord-action@v1.2.0
+      with:
+        webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
+        message: Check out the new desktop build ${{ steps.calculate_url.outputs.installer_url }}. ${{ steps.get_commit_message.outputs.commit_message }}
