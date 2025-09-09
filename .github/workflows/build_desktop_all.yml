@@ -45,8 +45,30 @@ on:
         type: boolean
         default: false
 
+env:
+  TARGET_BRANCH: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
+
 jobs:
+  set_status_pending:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'repository_dispatch'
+    steps:
+    - name: Set commit status to pending
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'Desktop Build All Platforms / build_desktop_all',
+            description: 'Desktop build (all platforms) in progress...'
+          });
   build_desktop_all:
+    needs: [set_status_pending]
+    if: always()
     strategy:
       fail-fast: false
       matrix:
@@ -82,3 +104,36 @@ jobs:
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
       publish_version: ${{ github.event.inputs.publish_version || '0.2.0' }}
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
+  set_status_complete:
+    runs-on: ubuntu-latest
+    needs: [build_desktop_all]
+    if: github.event_name == 'repository_dispatch' && always()
+    steps:
+    - name: Set commit status to success
+      if: needs.build_desktop_all.result == 'success'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'Desktop Build All Platforms / build_desktop_all',
+            description: 'Desktop build (all platforms) completed successfully'
+          });
+    - name: Set commit status to failure
+      if: needs.build_desktop_all.result != 'success'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'Desktop Build All Platforms / build_desktop_all',
+            description: 'Desktop build (all platforms) failed'
+          });

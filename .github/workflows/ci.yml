@@ -19,6 +19,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Set commit status to pending
+      if: github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'CI / build',
+            description: 'Build job in progress...'
+          });
     - name: Checkout code
       uses: actions/checkout@v3
       with:
@@ -56,9 +70,51 @@ jobs:
       with:
         name: npm-logs
         path: artifacts/npm-logs/
+    - name: Set commit status to success
+      if: success() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'CI / build',
+            description: 'Build completed successfully'
+          });
+    - name: Set commit status to failure
+      if: failure() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'CI / build',
+            description: 'Build failed'
+          });
   build-docker:
     runs-on: ubuntu-latest
     steps:
+    - name: Set commit status to pending
+      if: github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'CI / build-docker',
+            description: 'Docker build in progress...'
+          });
 
     - name: Checkout code
       uses: actions/checkout@v3
@@ -71,9 +127,51 @@ jobs:
       run: docker compose build
       env:
         PORT: 1337
+    - name: Set commit status to success
+      if: success() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'CI / build-docker',
+            description: 'Docker build completed successfully'
+          });
+    - name: Set commit status to failure
+      if: failure() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'CI / build-docker',
+            description: 'Docker build failed'
+          });
   types:
     runs-on: ubuntu-latest
     steps:
+    - name: Set commit status to pending
+      if: github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'CI / types',
+            description: 'Type checking in progress...'
+          });
     - name: Checkout code
       uses: actions/checkout@v3
       with:
@@ -104,10 +202,52 @@ jobs:
 
     - name: Check Types for Tests
       run: cd tests-e2e && npm run check-types
+    - name: Set commit status to success
+      if: success() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'CI / types',
+            description: 'Type checking passed'
+          });
+    - name: Set commit status to failure
+      if: failure() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'CI / types',
+            description: 'Type checking failed'
+          });
 
   test:
     runs-on: ubuntu-latest
     steps:
+    - name: Set commit status to pending
+      if: github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'CI / test',
+            description: 'Tests in progress...'
+          });
     - name: Checkout code
       uses: actions/checkout@v3
       with:
@@ -131,9 +271,51 @@ jobs:
 
     - name: Run Tests
       run: pnpm run test
+    - name: Set commit status to success
+      if: success() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'CI / test',
+            description: 'Tests passed'
+          });
+    - name: Set commit status to failure
+      if: failure() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'CI / test',
+            description: 'Tests failed'
+          });
   db-migrations:
     runs-on: ubuntu-latest
     steps:
+    - name: Set commit status to pending
+      if: github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'CI / db-migrations',
+            description: 'DB migrations check in progress...'
+          });
     - name: Checkout code
       uses: actions/checkout@v3
       with:
@@ -169,3 +351,31 @@ jobs:
           git diff | cat
           exit 1
         fi
+    - name: Set commit status to success
+      if: success() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'CI / db-migrations',
+            description: 'DB migrations check passed'
+          });
+    - name: Set commit status to failure
+      if: failure() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'CI / db-migrations',
+            description: 'DB migrations check failed'
+          });

@@ -49,6 +49,20 @@ jobs:
   mobile:
     runs-on: ubuntu-latest
     steps:
+    - name: Set commit status to pending
+      if: github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'update_mobile / mobile',
+            description: 'Mobile update in progress...'
+          });
     - name: Log Workflow Inputs
       run: |
         echo "platform: ${{ github.event.inputs.platform }}"
@@ -77,3 +91,31 @@ jobs:
         profile: ${{ env.PROFILE }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
         site_url: ${{ env.SITE_URL }}
+    - name: Set commit status to success
+      if: success() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'update_mobile / mobile',
+            description: 'Mobile update completed successfully'
+          });
+    - name: Set commit status to failure
+      if: failure() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'update_mobile / mobile',
+            description: 'Mobile update failed'
+          });

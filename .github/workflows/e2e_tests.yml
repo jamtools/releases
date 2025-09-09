@@ -20,6 +20,20 @@ jobs:
   wdio_chrome:
     runs-on: ubuntu-latest
     steps:
+    - name: Set commit status to pending
+      if: github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'e2e_tests / wdio_chrome',
+            description: 'E2E tests in progress...'
+          });
     - name: Checkout code
       uses: actions/checkout@v3
       with:
@@ -38,3 +52,31 @@ jobs:
       uses: ./.github/composite-actions/.github/actions/wdio_e2e
       with:
         browser: chrome
+    - name: Set commit status to success
+      if: success() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'e2e_tests / wdio_chrome',
+            description: 'E2E tests passed'
+          });
+    - name: Set commit status to failure
+      if: failure() && github.event_name == 'repository_dispatch'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'e2e_tests / wdio_chrome',
+            description: 'E2E tests failed'
+          });

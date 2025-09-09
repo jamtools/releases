@@ -50,8 +50,30 @@ on:
         type: boolean
         default: false
 
+env:
+  TARGET_BRANCH: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
+
 jobs:
+  set_status_pending:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'repository_dispatch'
+    steps:
+    - name: Set commit status to pending
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'pending',
+            context: 'Desktop Build Default Platform / build_desktop_mac',
+            description: 'Desktop build in progress...'
+          });
   build_desktop_mac:
+    needs: [set_status_pending]
+    if: always()
     strategy:
       fail-fast: false
       matrix:
@@ -88,3 +110,36 @@ jobs:
       run_on_self_hosted: ${{ github.event.inputs.run_on_self_hosted == 'true' }}
       publish_version: ${{ github.event.inputs.publish_version }}
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
+  set_status_complete:
+    runs-on: ubuntu-latest
+    needs: [build_desktop_mac]
+    if: github.event_name == 'repository_dispatch' && always()
+    steps:
+    - name: Set commit status to success
+      if: needs.build_desktop_mac.result == 'success'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'success',
+            context: 'Desktop Build Default Platform / build_desktop_mac',
+            description: 'Desktop build completed successfully'
+          });
+    - name: Set commit status to failure
+      if: needs.build_desktop_mac.result != 'success'
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.REPO_TOKEN }}
+        script: |
+          await github.rest.repos.createCommitStatus({
+            owner: '${{ secrets.REPO }}'.split('/')[0],
+            repo: '${{ secrets.REPO }}'.split('/')[1],
+            sha: '${{ env.TARGET_BRANCH }}',
+            state: 'failure',
+            context: 'Desktop Build Default Platform / build_desktop_mac',
+            description: 'Desktop build failed'
+          });
