@@ -6,7 +6,7 @@ on:
   #   - '*'
 
   repository_dispatch:
-    types: [ build-remote, new-commit-on-main ]
+    types: [ build-remote, new-commit-on-main, build-for-pr ]
 
   workflow_dispatch:
     inputs:
@@ -74,9 +74,9 @@ jobs:
       if: ${{ github.event.action != 'new-commit-on-main' }}
       uses: ./.github/composite-actions/.github/actions/build_mobile_eas
       with:
-        local: ${{ !inputs.run_on_eas }}
-        platform: ${{ inputs.platform || 'android' }}
-        profile: ${{  inputs.profile || 'production' }}
+        local: ${{ !inputs.run_on_eas || (github.event.action == 'build-for-pr' && !github.event.client_payload.run_on_eas) }}
+        platform: ${{ inputs.platform || (github.event.action == 'build-for-pr' && github.event.client_payload.platform) || 'android' }}
+        profile: ${{ inputs.profile || (github.event.action == 'build-for-pr' && github.event.client_payload.profile) || 'production' }}
         submit: ${{ inputs.submit }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
         asc_app_id: ${{ secrets.ASC_APP_ID }}
