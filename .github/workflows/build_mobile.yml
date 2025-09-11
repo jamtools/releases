@@ -80,7 +80,7 @@ jobs:
       if: ${{ github.event.action != 'new-commit-on-main' }}
       uses: ./.github/composite-actions/.github/actions/build_mobile_eas
       with:
-        local: ${{ !inputs.run_on_eas || (github.event.action == 'build-for-pr' && !github.event.client_payload.run_on_eas) }}
+        local: ${{ (github.event.action == 'build-for-pr' && !github.event.client_payload.run_on_eas) || (github.event.action != 'build-for-pr' && !inputs.run_on_eas) }}
         platform: ${{ inputs.platform || (github.event.action == 'build-for-pr' && github.event.client_payload.platform) || 'android' }}
         profile: ${{ inputs.profile || (github.event.action == 'build-for-pr' && github.event.client_payload.profile) || 'production' }}
         submit: ${{ inputs.submit }}
