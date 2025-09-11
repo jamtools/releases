@@ -50,12 +50,18 @@ jobs:
     steps:
     - name: Log Workflow Inputs
       run: |
-        echo "platform: ${{ github.event.inputs.platform }}"
-        echo "profile: ${{ github.event.inputs.profile }}"
-        echo "run_on_eas: ${{ github.event.inputs.run_on_eas }}"
-        echo "submit: ${{ github.event.inputs.submit }}"
-        echo "ref: ${{ github.event.inputs.ref }}"
+        echo "Event: ${{ github.event_name }} - ${{ github.event.action }}"
+        echo "platform: ${{ github.event.inputs.platform || github.event.client_payload.platform }}"
+        echo "profile: ${{ github.event.inputs.profile || github.event.client_payload.profile }}"
+        echo "run_on_eas: ${{ github.event.inputs.run_on_eas || github.event.client_payload.run_on_eas }}"
+        echo "submit: ${{ github.event.inputs.submit || github.event.client_payload.submit }}"
+        echo "ref: ${{ github.event.inputs.ref || github.event.client_payload.sha }}"
         echo "TARGET_BRANCH: ${{ env.TARGET_BRANCH }}"
+        if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          echo "Repository: ${{ github.event.client_payload.repository }}"
+          echo "PR Number: ${{ github.event.client_payload.pr_number }}"
+          echo "Run ID: ${{ github.event.client_payload.run_id }}"
+        fi
     - name: Checkout code
       uses: actions/checkout@v3
       with:
