@@ -94,7 +94,7 @@ jobs:
         local: false
         platform: 'all'
         profile: 'production'
-        submit: true
+        submit: false
         expo-token: ${{ secrets.EXPO_TOKEN }}
         asc_app_id: ${{ secrets.ASC_APP_ID }}
 
