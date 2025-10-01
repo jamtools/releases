@@ -88,3 +88,4 @@ jobs:
       run_on_self_hosted: ${{ github.event.inputs.run_on_self_hosted == 'true' }}
       publish_version: ${{ github.event.inputs.publish_version }}
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
+      enable_custom_site_url: true

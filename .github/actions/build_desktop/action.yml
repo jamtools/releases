@@ -47,6 +47,9 @@ inputs:
   build_e2e:
     required: false
     description: 'Build e2e app'
+  enable_custom_site_url:
+    required: true
+    description: 'Should enable custom site URL'
 
 runs:
   using: 'composite'
@@ -61,6 +64,7 @@ runs:
         echo "profile: ${{ inputs.profile }}"
         echo "site_url: ${{ inputs.site_url }}"
         echo "enable_debug: ${{ inputs.enable_debug }}"
+        echo "enable_custom_site_url: ${{ inputs.enable_custom_site_url }}"
 
     - name: Normalize temp for bash + Node on Windows
       if: runner.os == 'Windows'
@@ -122,6 +126,7 @@ runs:
       env:
         PUBLIC_SITE_URL: ${{ inputs.site_url }}
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+        PUBLIC_ENABLE_CUSTOM_SITE_URL: ${{ inputs.enable_custom_site_url }}
         SENTRY_DSN: ''
         SPRINGBOARD_PLATFORM_VARIANT: desktop,main
         APP_PROFILE: ${{ inputs.profile }}

@@ -82,3 +82,4 @@ jobs:
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
       publish_version: ${{ github.event.inputs.publish_version || '0.2.0' }}
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
+      enable_custom_site_url: false

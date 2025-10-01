@@ -38,6 +38,10 @@ on:
         required: false
         type: boolean
         default: false
+      enable_custom_site_url:
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   build_tauri:
@@ -53,6 +57,7 @@ jobs:
         echo "profile: ${{ inputs.profile }}"
         echo "site_url: ${{ inputs.site_url }}"
         echo "enable_debug: ${{ inputs.enable_debug }}"
+        echo "enable_custom_site_url: ${{ inputs.enable_custom_site_url }}"
 
     - name: Checkout code
       uses: actions/checkout@v3
@@ -85,6 +90,7 @@ jobs:
         apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
         enable_debug: ${{ inputs.enable_debug }}
+        enable_custom_site_url: ${{ inputs.enable_custom_site_url }}
 
       # I need to go through the compiled tauri apps, and look at the compiled folder structure
       # and then extract the installable for the given platform
