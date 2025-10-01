@@ -170,7 +170,7 @@ runs:
     #   shell: bash
 
     - name: Build Tauri app
-      run: npm run tauri build -- ${{ inputs.tauri_args }} ${{ (inputs.enable_debug && '--debug') || '' }}
+      run: npm run tauri build -- ${{ inputs.tauri_args }} ${{ ((inputs.enable_debug == 'true') && '--debug') || '' }}
       working-directory: ./apps/desktop_tauri
       shell: bash
 
