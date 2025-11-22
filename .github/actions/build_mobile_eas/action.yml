@@ -93,12 +93,7 @@ runs:
     shell: bash
     if: ${{ inputs.local != 'true' && (inputs.submit != 'true' || inputs.profile != 'production') }}
     working-directory: apps/mobile
-    run: |
-      if [ "${{ inputs.output_logs }}" = "true" ]; then
-        eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
-      else
-        eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} 1>/dev/null
-      fi
+    run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ inputs.output_logs == 'true' && '' || '1>/dev/null' }}
 
   - name: Build & submit mobile
     shell: bash
@@ -106,9 +101,4 @@ runs:
     working-directory: apps/mobile
     env:
       ASC_APP_ID: ${{ inputs.asc_app_id }}
-    run: |
-      if [ "${{ inputs.output_logs }}" = "true" ]; then
-        eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
-      else
-        eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} 1>/dev/null
-      fi
+    run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ inputs.output_logs == 'true' && '' || '1>/dev/null' }}
