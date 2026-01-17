@@ -93,6 +93,7 @@ jobs:
         output_logs: ${{ inputs.output_eas_build_to_logs || github.event.client_payload.output_eas_build_to_logs || false }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
         asc_app_id: ${{ secrets.ASC_APP_ID }}
+        discord_webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
 
     - name: Build Mobile App and Submit with EAS
       if: ${{ github.event.action == 'new-commit-on-main' }}
@@ -105,6 +106,7 @@ jobs:
         output_logs: false
         expo-token: ${{ secrets.EXPO_TOKEN }}
         asc_app_id: ${{ secrets.ASC_APP_ID }}
+        discord_webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
 
     # - name: Build Mobile App with Gradle
     #   uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
