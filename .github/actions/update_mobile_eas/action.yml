@@ -74,7 +74,7 @@ runs:
     if: ${{ inputs.discord_webhook_url != '' }}
     shell: bash
     run: |
-      FINGERPRINT_FILE="apps/mobile/.expo-fingerprint"
+      FINGERPRINT_FILE="apps/mobile/.expo-fingerprint.json"
       if [ -f "$FINGERPRINT_FILE" ]; then
         MAIN_ANDROID=$(jq -r '.android' "$FINGERPRINT_FILE")
         MAIN_IOS=$(jq -r '.ios' "$FINGERPRINT_FILE")
