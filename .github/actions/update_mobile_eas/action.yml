@@ -14,6 +14,9 @@ inputs:
   site_url:
     description: 'Site URL'
     required: true
+  discord_webhook_url:
+    description: 'Discord webhook URL for fingerprint change notifications'
+    required: false
 
 runs:
   using: 'composite'
@@ -56,6 +59,7 @@ runs:
       EXPO_APP_PROFILE: ${{ inputs.profile }}
 
   - name: Compute expo fingerprint
+    id: fingerprint
     uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
     with:
       profile: ${{ inputs.profile }}
@@ -65,6 +69,45 @@ runs:
       EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
       APP_PROFILE: ${{ inputs.profile }}
       EXPO_APP_PROFILE: ${{ inputs.profile }}
+
+  - name: Check fingerprint changes and notify
+    if: ${{ inputs.discord_webhook_url != '' }}
+    shell: bash
+    run: |
+      FINGERPRINT_FILE="apps/mobile/.expo-fingerprint.json"
+      if [ -f "$FINGERPRINT_FILE" ]; then
+        MAIN_ANDROID=$(jq -r '.android' "$FINGERPRINT_FILE")
+        MAIN_IOS=$(jq -r '.ios' "$FINGERPRINT_FILE")
+
+        CURRENT_ANDROID="${{ steps.fingerprint.outputs.android-fingerprint }}"
+        CURRENT_IOS="${{ steps.fingerprint.outputs.ios-fingerprint }}"
+
+        CHANGED=""
+        if [ -n "$CURRENT_ANDROID" ] && [ "$MAIN_ANDROID" != "$CURRENT_ANDROID" ]; then
+          CHANGED="Android fingerprint changed: $MAIN_ANDROID -> $CURRENT_ANDROID"
+        fi
+        if [ -n "$CURRENT_IOS" ] && [ "$MAIN_IOS" != "$CURRENT_IOS" ]; then
+          if [ -n "$CHANGED" ]; then
+            CHANGED="$CHANGED"$'\n'"iOS fingerprint changed: $MAIN_IOS -> $CURRENT_IOS"
+          else
+            CHANGED="iOS fingerprint changed: $MAIN_IOS -> $CURRENT_IOS"
+          fi
+        fi
+
+        if [ -n "$CHANGED" ]; then
+          echo "Fingerprint changed, sending Discord notification..."
+          jq -n \
+            --arg changes "$CHANGED" \
+            --arg profile "${{ inputs.profile }}" \
+            --arg platform "${{ inputs.platform }}" \
+            '{"content": "⚠️ **Expo Fingerprint Changed** (update_mobile)\nProfile: \($profile) | Platform: \($platform)\n\($changes)\n\nA new native build may be required."}' | \
+          curl -X POST -H "Content-Type: application/json" -d @- "${{ inputs.discord_webhook_url }}"
+        else
+          echo "Fingerprint unchanged"
+        fi
+      else
+        echo "No fingerprint file found at $FINGERPRINT_FILE, skipping comparison"
+      fi
 
   - name: Send update to eas
     shell: bash

@@ -77,3 +77,4 @@ jobs:
         profile: ${{ env.PROFILE }}
         expo-token: ${{ secrets.EXPO_TOKEN }}
         site_url: ${{ env.SITE_URL }}
+        discord_webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
