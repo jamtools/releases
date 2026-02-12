@@ -107,6 +107,7 @@ runs:
       with:
         workspaces: apps/desktop_tauri/src-tauri
         cache-targets: true
+        add-job-id-key: false
 
     - name: Install OS dependencies (ubuntu only)
       shell: bash
