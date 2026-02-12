@@ -178,12 +178,13 @@ jobs:
       sign_app: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.sign_app == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
       target_branch: vk/8394-55-feat-implemen
       # target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
-      profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
-      site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
+      profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) || 'preview' }}
+      site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) || 'https://staging.songdrive.app' }}
       publish_version: ${{ needs.compute_publish_version.outputs.publish_version }}
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
       enable_custom_site_url: false
-      enable_tauri_updates: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main' }}
+      enable_tauri_updates: true
+      # enable_tauri_updates: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main' }}
 
   publish_latest_manifest:
     needs: [compute_publish_version, build_desktop_all]
