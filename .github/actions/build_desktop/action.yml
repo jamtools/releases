@@ -119,66 +119,6 @@ runs:
       shell: bash
       run: pnpm i
 
-    - name: Debug Cargo.toml [package] block
-      shell: bash
-      run: |
-        echo "---- apps/desktop_tauri/src-tauri/Cargo.toml ([package] block) ----"
-        awk 'BEGIN{inpkg=0} /^\[/{inpkg=0} /^\[package\]/{inpkg=1} inpkg{print}' apps/desktop_tauri/src-tauri/Cargo.toml
-        echo "---------------------------------------------------------------"
-
-    - name: Inject app version
-      if: inputs.publish_version != ''
-      shell: bash
-      env:
-        PUBLISH_VERSION: ${{ inputs.publish_version }}
-      run: |
-        python3 - <<'PY'
-        import json
-        import os
-        import re
-        from pathlib import Path
-
-        publish_version = os.environ["PUBLISH_VERSION"].strip()
-
-        tauri_base_conf_path = Path("apps/desktop_tauri/src-tauri/tauri.base.conf.json")
-        cargo_toml_path = Path("apps/desktop_tauri/src-tauri/Cargo.toml")
-        desktop_pkg_json_path = Path("apps/desktop_tauri/package.json")
-
-        # Update tauri.base.conf.json
-        base_conf = json.loads(tauri_base_conf_path.read_text(encoding="utf-8"))
-        base_conf["version"] = publish_version
-        tauri_base_conf_path.write_text(json.dumps(base_conf, indent=2) + "\n", encoding="utf-8")
-
-        # Update Cargo.toml [package].version
-        lines = cargo_toml_path.read_text(encoding="utf-8").splitlines(keepends=True)
-        out = []
-        in_package = False
-        replaced = False
-
-        for line in lines:
-          stripped = line.strip()
-          if stripped.startswith("[") and stripped.endswith("]"):
-            in_package = stripped == "[package]"
-          if in_package and not replaced and re.match(r'^version\\s*=\\s*\".*\"\\s*$', stripped):
-            out.append(f'version = "{publish_version}"\\n')
-            replaced = True
-          else:
-            out.append(line)
-
-        if not replaced:
-          raise RuntimeError("Failed to update Cargo.toml [package].version")
-
-        cargo_toml_path.write_text("".join(out), encoding="utf-8")
-
-        # Update apps/desktop_tauri/package.json version (optional consistency)
-        if desktop_pkg_json_path.exists():
-          desktop_pkg = json.loads(desktop_pkg_json_path.read_text(encoding="utf-8"))
-          desktop_pkg["version"] = publish_version
-          desktop_pkg_json_path.write_text(json.dumps(desktop_pkg, indent=2) + "\n", encoding="utf-8")
-
-        print(f"Injected publish_version={publish_version}")
-        PY
-
     - name: Populate e2e env vars (safe)
       if: inputs.build_e2e
       shell: bash
@@ -214,6 +154,7 @@ runs:
       working-directory: ./apps/desktop_tauri
       env:
         APP_PROFILE: ${{ inputs.profile }}
+        PUBLISH_VERSION: ${{ inputs.publish_version }}
 
     - name: Fetch Rust dependencies
       shell: bash
