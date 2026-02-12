@@ -388,7 +388,7 @@ jobs:
         out_path = os.path.join("updater-platform-manifest", f"{platform}.json")
         with open(out_path, "w", encoding="utf-8") as f:
           json.dump(manifest, f, indent=2, sort_keys=True)
-          f.write("\\n")
+          f.write("\n")
 
         print(f"Wrote {out_path}")
         PY

@@ -228,7 +228,7 @@ jobs:
         os.makedirs("manifest", exist_ok=True)
         with open("manifest/latest.json", "w", encoding="utf-8") as f:
           json.dump(latest, f, indent=2, sort_keys=True)
-          f.write("\\n")
+          f.write("\n")
 
         print("Wrote manifest/latest.json")
         PY
