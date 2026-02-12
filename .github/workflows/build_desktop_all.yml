@@ -123,8 +123,8 @@ jobs:
         pub_date = now_rfc3339()
 
         with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
-          f.write(f"publish_version={publish_version}\\n")
-          f.write(f"pub_date={pub_date}\\n")
+          f.write(f"publish_version={publish_version}\n")
+          f.write(f"pub_date={pub_date}\n")
         PY
 
   build_desktop_all:
