@@ -5,9 +5,9 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  # push:
-  #   branches:
-  #   - '*'
+  push:
+    branches:
+    - '*'
 
   repository_dispatch:
     types: [ new-commit-on-main ]

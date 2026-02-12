@@ -1,9 +1,9 @@
 name: Desktop Build Default Platform
 
 on:
-  push:
-    branches:
-    - '*'
+  # push:
+  #   branches:
+  #   - '*'
 
   repository_dispatch:
     types: [ build-remote ]
