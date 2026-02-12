@@ -102,10 +102,11 @@ jobs:
           v = v.strip()
           if v.startswith("v"):
             v = v[1:]
-          m = re.fullmatch(r"(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:[-+].*)?", v)
-          if not m:
-            raise ValueError(f"Invalid semver: {v}")
-          return int(m.group(1)), int(m.group(2)), int(m.group(3))
+          try:
+            major, minor, patch = v.split(".", 2)
+            return int(major), int(minor), int(patch)
+          except Exception as exc:
+            raise ValueError(f"Invalid semver: {v}") from exc
 
         def inc_patch(v: str):
           major, minor, patch = parse_semver(v)
