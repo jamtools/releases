@@ -119,6 +119,13 @@ runs:
       shell: bash
       run: pnpm i
 
+    - name: Debug Cargo.toml [package] block
+      shell: bash
+      run: |
+        echo "---- apps/desktop_tauri/src-tauri/Cargo.toml ([package] block) ----"
+        awk 'BEGIN{inpkg=0} /^\[/{inpkg=0} /^\[package\]/{inpkg=1} inpkg{print}' apps/desktop_tauri/src-tauri/Cargo.toml
+        echo "---------------------------------------------------------------"
+
     - name: Inject app version
       if: inputs.publish_version != ''
       shell: bash

@@ -1,9 +1,9 @@
 name: Desktop Build Default Platform
 
 on:
-  # push:
-  #   branches:
-  #   - '*'
+  push:
+    branches:
+    - '*'
 
   repository_dispatch:
     types: [ build-remote ]
@@ -82,10 +82,12 @@ jobs:
       tauri_target: ${{ matrix.tauri_target }}
       # pkg_target: ${{ matrix.pkg_target }}
       sign_app: ${{ github.event.inputs.sign_app == 'true' }}
-      target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
+      target_branch: vk/8394-55-feat-implemen
+      # target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
       profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
       run_on_self_hosted: ${{ github.event.inputs.run_on_self_hosted == 'true' }}
-      publish_version: ${{ github.event.inputs.publish_version }}
+      publish_version: 0.1.0
+      # publish_version: ${{ github.event.inputs.publish_version }}
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') || github.event_name == 'repository_dispatch' }}
       enable_custom_site_url: true
