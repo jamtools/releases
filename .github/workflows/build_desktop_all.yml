@@ -62,14 +62,31 @@ jobs:
       env:
         PUBLIC_URL: ${{ secrets.R2_DESKTOP_BUILDS_PUBLIC_URL }}
         OVERRIDE_PUBLISH_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_version || '' }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
+        AWS_DEFAULT_REGION: auto
+        AWS_EC2_METADATA_DISABLED: true
+        R2_BUCKET: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
+        R2_ENDPOINT: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
       run: |
+        latest_json_path="$(mktemp)"
+        if aws s3api get-object \
+          --bucket "${R2_BUCKET}" \
+          --key "builds/desktop/latest.json" \
+          --endpoint-url "${R2_ENDPOINT}" \
+          "${latest_json_path}" >/dev/null 2>&1; then
+          export LATEST_JSON_PATH="${latest_json_path}"
+        else
+          echo "WARNING: failed to fetch builds/desktop/latest.json from R2 (will bootstrap)." >&2
+          rm -f "${latest_json_path}"
+          export LATEST_JSON_PATH=""
+        fi
+
         python3 - <<'PY'
         import json
         import os
         import re
         import sys
-        import urllib.error
-        import urllib.request
         from datetime import datetime, timezone
 
         override = (os.environ.get("OVERRIDE_PUBLISH_VERSION") or "").strip()
@@ -100,17 +117,15 @@ jobs:
           parse_semver(publish_version)
           print(f"Using override publish_version={publish_version}")
         else:
-          latest_url = f"{public_url}/builds/desktop/latest.json"
           latest_version = None
-          try:
-            with urllib.request.urlopen(latest_url, timeout=20) as resp:
-              data = json.loads(resp.read().decode("utf-8"))
-              latest_version = data.get("version")
-          except urllib.error.HTTPError as e:
-            if e.code not in (403, 404):
-              raise
-          except Exception as e:
-            print(f"WARNING: failed to fetch {latest_url}: {e}", file=sys.stderr)
+          latest_path = os.environ.get("LATEST_JSON_PATH") or ""
+          if latest_path and os.path.exists(latest_path):
+            try:
+              with open(latest_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                latest_version = data.get("version")
+            except Exception as e:
+              print(f"WARNING: failed to parse latest.json from R2: {e}", file=sys.stderr)
 
           if latest_version:
             publish_version = inc_patch(latest_version)
