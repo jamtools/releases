@@ -59,6 +59,9 @@ inputs:
   enable_custom_site_url:
     required: true
     description: 'Should enable custom site URL'
+  enable_tauri_updates:
+    required: false
+    description: 'Enable Tauri auto-updates'
 
 runs:
   using: 'composite'
@@ -144,6 +147,7 @@ runs:
         PUBLIC_SITE_URL: ${{ inputs.site_url }}
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
         PUBLIC_ENABLE_CUSTOM_SITE_URL: ${{ inputs.enable_custom_site_url }}
+        PUBLIC_ENABLE_TAURI_UPDATES: ${{ inputs.enable_tauri_updates == 'true' && 'true' || '' }}
         SENTRY_DSN: ''
         SPRINGBOARD_PLATFORM_VARIANT: desktop,main
         APP_PROFILE: ${{ inputs.profile }}

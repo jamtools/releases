@@ -42,6 +42,10 @@ on:
         required: true
         type: boolean
         default: false
+      enable_tauri_updates:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build_tauri:
@@ -94,6 +98,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         enable_debug: ${{ inputs.enable_debug }}
         enable_custom_site_url: ${{ inputs.enable_custom_site_url }}
+        enable_tauri_updates: ${{ inputs.enable_tauri_updates }}
 
       # I need to go through the compiled tauri apps, and look at the compiled folder structure
       # and then extract the installable for the given platform
