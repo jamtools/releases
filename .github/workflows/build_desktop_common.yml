@@ -75,9 +75,6 @@ jobs:
 
     - name: Build Tauri App
       uses: ./.github/composite-actions/.github/actions/build_desktop
-      env:
-        TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
       with:
         platform: ${{ inputs.platform }}
         publish_version: ${{ inputs.publish_version }}
@@ -86,6 +83,8 @@ jobs:
         sign_app: ${{ inputs.sign_app }}
         profile: ${{ inputs.profile }}
         site_url: ${{ inputs.site_url }}
+        tauri_signing_private_key: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        tauri_signing_private_key_password: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         apple_certificate: ${{ secrets.APPLE_CERTIFICATE }}
         apple_certificate_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         apple_signing_identity: ${{ secrets.APPLE_SIGNING_IDENTITY }}
