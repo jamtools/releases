@@ -42,6 +42,10 @@ on:
         required: true
         type: boolean
         default: false
+      enable_tauri_updates:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build_tauri:
@@ -77,11 +81,14 @@ jobs:
       uses: ./.github/composite-actions/.github/actions/build_desktop
       with:
         platform: ${{ inputs.platform }}
+        publish_version: ${{ inputs.publish_version }}
         tauri_args: ${{ inputs.tauri_args }}
         tauri_target: ${{ inputs.tauri_target }}
         sign_app: ${{ inputs.sign_app }}
         profile: ${{ inputs.profile }}
         site_url: ${{ inputs.site_url }}
+        tauri_signing_private_key: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        tauri_signing_private_key_password: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         apple_certificate: ${{ secrets.APPLE_CERTIFICATE }}
         apple_certificate_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         apple_signing_identity: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -91,6 +98,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         enable_debug: ${{ inputs.enable_debug }}
         enable_custom_site_url: ${{ inputs.enable_custom_site_url }}
+        enable_tauri_updates: ${{ inputs.enable_tauri_updates }}
 
       # I need to go through the compiled tauri apps, and look at the compiled folder structure
       # and then extract the installable for the given platform
@@ -228,9 +236,58 @@ jobs:
         echo "Successfully created: staging/$NEW_FILENAME"
         ls -la "staging/$NEW_FILENAME"
 
+        UPDATER_PAYLOAD_FILENAME=""
+        UPDATER_SIGNATURE_FILENAME=""
+
+        if [[ "${{ inputs.platform }}" == "macos-latest" || "${{ inputs.platform }}" == "macos-"* ]]; then
+          echo "Locating macOS updater bundle (.app.tar.gz) + signature..."
+
+          TAR_FILE=$(find artifacts/${{ inputs.platform }} -name "*.app.tar.gz" | head -1)
+          if [[ -z "$TAR_FILE" ]]; then
+            echo "ERROR: No .app.tar.gz file found for updater in artifacts/${{ inputs.platform }}"
+            find artifacts/${{ inputs.platform }} -type f | head -n 200 || true
+            exit 1
+          fi
+
+          TAR_SIG_FILE="${TAR_FILE}.sig"
+          if [[ ! -f "$TAR_SIG_FILE" ]]; then
+            echo "ERROR: Missing updater signature file: $TAR_SIG_FILE"
+            find "$(dirname "$TAR_FILE")" -type f | head -n 200 || true
+            exit 1
+          fi
+
+          UPDATER_PAYLOAD_FILENAME="${{ steps.datetime.outputs.value }}_${{ steps.commit_hash.outputs.hash }}_${SANITIZED_FILENAME}_${{ inputs.publish_version }}.app.tar.gz"
+          UPDATER_SIGNATURE_FILENAME="${UPDATER_PAYLOAD_FILENAME}.sig"
+
+          cp "$TAR_FILE" "staging/$UPDATER_PAYLOAD_FILENAME"
+          cp "$TAR_SIG_FILE" "staging/$UPDATER_SIGNATURE_FILENAME"
+
+          echo "Staged updater payload: staging/$UPDATER_PAYLOAD_FILENAME"
+          echo "Staged updater signature: staging/$UPDATER_SIGNATURE_FILENAME"
+        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+          echo "Locating Windows updater signature for selected installer..."
+
+          EXE_SIG_FILE="${EXE_FILE}.sig"
+          if [[ ! -f "$EXE_SIG_FILE" ]]; then
+            echo "ERROR: Missing updater signature file: $EXE_SIG_FILE"
+            find "$(dirname "$EXE_FILE")" -type f | head -n 200 || true
+            exit 1
+          fi
+
+          # On Windows we reuse the selected installer as the updater payload.
+          UPDATER_PAYLOAD_FILENAME="$NEW_FILENAME"
+          UPDATER_SIGNATURE_FILENAME="${NEW_FILENAME}.sig"
+
+          cp "$EXE_SIG_FILE" "staging/$UPDATER_SIGNATURE_FILENAME"
+
+          echo "Staged updater signature: staging/$UPDATER_SIGNATURE_FILENAME"
+        fi
+
         # Set outputs
         echo "installer_file=staging/$NEW_FILENAME" >> $GITHUB_OUTPUT
         echo "filename=$NEW_FILENAME" >> $GITHUB_OUTPUT
+        echo "updater_payload_filename=$UPDATER_PAYLOAD_FILENAME" >> $GITHUB_OUTPUT
+        echo "updater_signature_filename=$UPDATER_SIGNATURE_FILENAME" >> $GITHUB_OUTPUT
 
         echo "Installer extraction completed successfully!"
 
@@ -265,6 +322,83 @@ jobs:
           echo "$COMMIT_MSG"
           echo "EOF"
         } >> $GITHUB_OUTPUT
+
+    - name: Create updater platform manifest artifact
+      if: inputs.publish_version != ''
+      shell: bash
+      env:
+        PUBLIC_URL: ${{ secrets.R2_DESKTOP_BUILDS_PUBLIC_URL }}
+        PLATFORM: ${{ inputs.platform }}
+        TAURI_TARGET: ${{ inputs.tauri_target }}
+        PUBLISH_VERSION: ${{ inputs.publish_version }}
+        UPDATER_PAYLOAD_FILENAME: ${{ steps.extract_installer.outputs.updater_payload_filename }}
+        UPDATER_SIGNATURE_FILENAME: ${{ steps.extract_installer.outputs.updater_signature_filename }}
+        COMMIT_MESSAGE: ${{ steps.get_commit_message.outputs.commit_message }}
+      run: |
+        python3 - <<'PY'
+        import json
+        import os
+        import sys
+
+        public_url = (os.environ.get("PUBLIC_URL") or "").rstrip("/")
+        platform = os.environ["PLATFORM"]
+        tauri_target = os.environ.get("TAURI_TARGET") or ""
+        publish_version = os.environ["PUBLISH_VERSION"]
+        payload_filename = os.environ.get("UPDATER_PAYLOAD_FILENAME") or ""
+        sig_filename = os.environ.get("UPDATER_SIGNATURE_FILENAME") or ""
+        notes = os.environ.get("COMMIT_MESSAGE") or ""
+
+        if not payload_filename or not sig_filename:
+          print("Missing updater payload/signature filenames; cannot build manifest.", file=sys.stderr)
+          sys.exit(1)
+
+        sig_path = os.path.join("staging", sig_filename)
+        with open(sig_path, "r", encoding="utf-8") as f:
+          signature = f.read().strip()
+
+        url = f"{public_url}/builds/desktop/{payload_filename}"
+
+        platforms = {}
+
+        if platform.startswith("windows"):
+          platforms["windows-x86_64"] = {"url": url, "signature": signature}
+        elif platform.startswith("macos"):
+          # For universal builds, serve the same tarball/signature for both arch keys.
+          if "universal" in tauri_target:
+            platforms["darwin-aarch64"] = {"url": url, "signature": signature}
+            platforms["darwin-x86_64"] = {"url": url, "signature": signature}
+          elif "aarch64" in tauri_target:
+            platforms["darwin-aarch64"] = {"url": url, "signature": signature}
+          elif "x86_64" in tauri_target:
+            platforms["darwin-x86_64"] = {"url": url, "signature": signature}
+          else:
+            # Default assumption for macos-latest if no explicit target provided
+            platforms["darwin-aarch64"] = {"url": url, "signature": signature}
+        else:
+          print(f"Unsupported platform for updater manifest: {platform}", file=sys.stderr)
+          sys.exit(1)
+
+        manifest = {
+          "version": publish_version,
+          "notes": notes,
+          "platforms": platforms,
+        }
+
+        os.makedirs("updater-platform-manifest", exist_ok=True)
+        out_path = os.path.join("updater-platform-manifest", f"{platform}.json")
+        with open(out_path, "w", encoding="utf-8") as f:
+          json.dump(manifest, f, indent=2, sort_keys=True)
+          f.write("\n")
+
+        print(f"Wrote {out_path}")
+        PY
+
+    - name: Upload updater platform manifest artifact
+      if: inputs.publish_version != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: updater-platform-manifest-${{ inputs.platform }}
+        path: updater-platform-manifest
 
     - name: Send Discord message
       if: inputs.publish_version != ''

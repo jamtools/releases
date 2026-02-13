@@ -1,5 +1,9 @@
 name: Desktop Build All Platforms
 
+concurrency:
+  group: desktop-build-all
+  cancel-in-progress: false
+
 on:
   # push:
   #   branches:
@@ -46,7 +50,101 @@ on:
         default: false
 
 jobs:
+  compute_publish_version:
+    runs-on: ubuntu-latest
+    outputs:
+      publish_version: ${{ steps.compute.outputs.publish_version }}
+      pub_date: ${{ steps.compute.outputs.pub_date }}
+    steps:
+    - name: Compute publish version
+      id: compute
+      shell: bash
+      env:
+        PUBLIC_URL: ${{ secrets.R2_DESKTOP_BUILDS_PUBLIC_URL }}
+        OVERRIDE_PUBLISH_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_version || '' }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
+        AWS_DEFAULT_REGION: auto
+        AWS_EC2_METADATA_DISABLED: true
+        R2_BUCKET: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
+        R2_ENDPOINT: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
+      run: |
+        latest_json_path="$(mktemp)"
+        if aws s3api get-object \
+          --bucket "${R2_BUCKET}" \
+          --key "builds/desktop/latest.json" \
+          --endpoint-url "${R2_ENDPOINT}" \
+          "${latest_json_path}" >/dev/null 2>&1; then
+          export LATEST_JSON_PATH="${latest_json_path}"
+        else
+          echo "WARNING: failed to fetch builds/desktop/latest.json from R2 (will bootstrap)." >&2
+          rm -f "${latest_json_path}"
+          export LATEST_JSON_PATH=""
+        fi
+
+        python3 - <<'PY'
+        import json
+        import os
+        import re
+        import sys
+        from datetime import datetime, timezone
+
+        override = (os.environ.get("OVERRIDE_PUBLISH_VERSION") or "").strip()
+        public_url = (os.environ.get("PUBLIC_URL") or "").rstrip("/")
+        if not public_url:
+          print("PUBLIC_URL secret is required (R2_DESKTOP_BUILDS_PUBLIC_URL).", file=sys.stderr)
+          sys.exit(1)
+
+        def now_rfc3339():
+          return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+        def parse_semver(v: str):
+          v = v.strip()
+          if v.startswith("v"):
+            v = v[1:]
+          try:
+            major, minor, patch = v.split(".", 2)
+            return int(major), int(minor), int(patch)
+          except Exception as exc:
+            raise ValueError(f"Invalid semver: {v}") from exc
+
+        def inc_patch(v: str):
+          major, minor, patch = parse_semver(v)
+          return f"{major}.{minor}.{patch + 1}"
+
+        if override:
+          publish_version = override
+          # Validate
+          parse_semver(publish_version)
+          print(f"Using override publish_version={publish_version}")
+        else:
+          latest_version = None
+          latest_path = os.environ.get("LATEST_JSON_PATH") or ""
+          if latest_path and os.path.exists(latest_path):
+            try:
+              with open(latest_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                latest_version = data.get("version")
+            except Exception as e:
+              print(f"WARNING: failed to parse latest.json from R2: {e}", file=sys.stderr)
+
+          if latest_version:
+            publish_version = inc_patch(latest_version)
+            print(f"Bumping patch from latest.json {latest_version} -> {publish_version}")
+          else:
+            # Bootstrap case: first publish
+            publish_version = "0.1.0"
+            print(f"WARNING: latest.json missing; bootstrapping publish_version={publish_version}", file=sys.stderr)
+
+        pub_date = now_rfc3339()
+
+        with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+          f.write(f"publish_version={publish_version}\n")
+          f.write(f"pub_date={pub_date}\n")
+        PY
+
   build_desktop_all:
+    needs: [compute_publish_version]
     strategy:
       fail-fast: false
       matrix:
@@ -78,8 +176,86 @@ jobs:
       # pkg_target: ${{ matrix.pkg_target }}
       sign_app: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.sign_app == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
       target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
-      profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) }}
-      site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) }}
-      publish_version: ${{ github.event.inputs.publish_version || '0.2.0' }}
+      profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) || 'preview' }}
+      site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) || 'https://staging.songdrive.app' }}
+      publish_version: ${{ needs.compute_publish_version.outputs.publish_version }}
+      # enable_debug: true
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
       enable_custom_site_url: false
+      enable_tauri_updates: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main' }}
+
+  publish_latest_manifest:
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main'
+    needs: [compute_publish_version, build_desktop_all]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download platform manifests
+      uses: actions/download-artifact@v4
+      with:
+        pattern: updater-platform-manifest-*
+        path: manifests
+        merge-multiple: true
+
+    - name: Build builds/desktop/latest.json
+      id: build_latest
+      shell: bash
+      env:
+        PUBLISH_VERSION: ${{ needs.compute_publish_version.outputs.publish_version }}
+        PUB_DATE: ${{ needs.compute_publish_version.outputs.pub_date }}
+      run: |
+        python3 - <<'PY'
+        import glob
+        import json
+        import os
+        import sys
+
+        publish_version = os.environ["PUBLISH_VERSION"].strip()
+        pub_date = os.environ["PUB_DATE"].strip()
+
+        platforms = {}
+        notes = None
+
+        files = sorted(glob.glob("manifests/**/*.json", recursive=True))
+        if not files:
+          print("No platform manifest artifacts found.", file=sys.stderr)
+          sys.exit(1)
+
+        for fp in files:
+          with open(fp, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+          file_version = data.get("version")
+          if file_version and file_version != publish_version:
+            raise RuntimeError(f"Manifest version mismatch: expected {publish_version}, got {file_version} in {fp}")
+
+          if notes is None and data.get("notes"):
+            notes = data.get("notes")
+
+          p = data.get("platforms") or {}
+          for k, v in p.items():
+            platforms[k] = v
+
+        latest = {
+          "version": publish_version,
+          "pub_date": pub_date,
+          "notes": notes or "",
+          "platforms": platforms,
+        }
+
+        os.makedirs("manifest", exist_ok=True)
+        with open("manifest/latest.json", "w", encoding="utf-8") as f:
+          json.dump(latest, f, indent=2, sort_keys=True)
+          f.write("\n")
+
+        print("Wrote manifest/latest.json")
+        PY
+
+    - name: Upload builds/desktop/latest.json to S3 compatible
+      uses: shallwefootball/s3-upload-action@master
+      with:
+        aws_key_id: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
+        aws_bucket: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
+        source_dir: 'manifest'
+        destination_dir: 'builds/desktop'
+        endpoint: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}

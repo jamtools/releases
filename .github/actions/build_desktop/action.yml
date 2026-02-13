@@ -5,6 +5,9 @@ inputs:
   platform:
     required: true
     description: 'Platform to run on'
+  publish_version:
+    required: false
+    description: 'Version to inject into the app before building (SemVer)'
   tauri_args:
     required: true
     description: 'Arguments for Tauri'
@@ -41,6 +44,12 @@ inputs:
   apple_team_id:
     required: false
     description: 'Apple team ID'
+  tauri_signing_private_key:
+    required: false
+    description: 'Tauri updater signing private key'
+  tauri_signing_private_key_password:
+    required: false
+    description: 'Password for Tauri updater signing private key'
   enable_debug:
     required: false
     description: 'Enable debug'
@@ -50,6 +59,9 @@ inputs:
   enable_custom_site_url:
     required: true
     description: 'Should enable custom site URL'
+  enable_tauri_updates:
+    required: false
+    description: 'Enable Tauri auto-updates'
 
 runs:
   using: 'composite'
@@ -58,6 +70,7 @@ runs:
       shell: bash
       run: |
         echo "platform: ${{ inputs.platform }}"
+        echo "publish_version: ${{ inputs.publish_version }}"
         echo "tauri_args: ${{ inputs.tauri_args }}"
         echo "tauri_target: ${{ inputs.tauri_target }}"
         echo "sign_app: ${{ inputs.sign_app }}"
@@ -91,6 +104,13 @@ runs:
 
     - name: Install Rust stable
       uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Rust build
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: apps/desktop_tauri/src-tauri
+        cache-targets: true
+        add-job-id-key: false
 
     - name: Install OS dependencies (ubuntu only)
       shell: bash
@@ -127,6 +147,7 @@ runs:
         PUBLIC_SITE_URL: ${{ inputs.site_url }}
         EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
         PUBLIC_ENABLE_CUSTOM_SITE_URL: ${{ inputs.enable_custom_site_url }}
+        PUBLIC_ENABLE_TAURI_UPDATES: ${{ inputs.enable_tauri_updates == 'true' && 'true' || '' }}
         SENTRY_DSN: ''
         SPRINGBOARD_PLATFORM_VARIANT: desktop,main
         APP_PROFILE: ${{ inputs.profile }}
@@ -138,6 +159,7 @@ runs:
       working-directory: ./apps/desktop_tauri
       env:
         APP_PROFILE: ${{ inputs.profile }}
+        PUBLISH_VERSION: ${{ inputs.publish_version }}
 
     - name: Fetch Rust dependencies
       shell: bash
@@ -163,6 +185,16 @@ runs:
           echo "APPLE_PASSWORD=${{ inputs.apple_password }}" >> $GITHUB_ENV
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
           echo "MACOS_SANDBOXED=true" >> $GITHUB_ENV
+        fi
+
+    - name: Set Tauri signing environment variables
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.tauri_signing_private_key }}" ]; then
+          echo "TAURI_SIGNING_PRIVATE_KEY=${{ inputs.tauri_signing_private_key }}" >> $GITHUB_ENV
+        fi
+        if [ -n "${{ inputs.tauri_signing_private_key_password }}" ]; then
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=${{ inputs.tauri_signing_private_key_password }}" >> $GITHUB_ENV
         fi
 
     # - name: Set Tauri log level
