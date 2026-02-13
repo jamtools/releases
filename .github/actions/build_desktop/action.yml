@@ -197,44 +197,6 @@ runs:
           echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=${{ inputs.tauri_signing_private_key_password }}" >> $GITHUB_ENV
         fi
 
-    - name: Debug updater build context
-      shell: bash
-      run: |
-        echo "---- env ----"
-        echo "APP_PROFILE=${APP_PROFILE:-}"
-        echo "PUBLIC_ENABLE_TAURI_UPDATES=${PUBLIC_ENABLE_TAURI_UPDATES:-}"
-        if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
-          echo "TAURI_SIGNING_PRIVATE_KEY=present"
-        else
-          echo "TAURI_SIGNING_PRIVATE_KEY=missing"
-        fi
-        if [ -n "${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:-}" ]; then
-          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=present"
-        else
-          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=missing"
-        fi
-        echo "CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-}"
-        echo ""
-        echo "---- versions ----"
-        rustc --version || true
-        cargo --version || true
-        pnpm tauri --version || true
-        echo ""
-        echo "---- tauri.conf.json ----"
-        python3 - <<'PY'
-        import json
-        from pathlib import Path
-        p = Path("apps/desktop_tauri/src-tauri/tauri.conf.json")
-        data = json.loads(p.read_text(encoding="utf-8"))
-        print("bundle.targets =", data.get("bundle", {}).get("targets"))
-        print("bundle.createUpdaterArtifacts =", data.get("bundle", {}).get("createUpdaterArtifacts"))
-        print("plugins.updater =", data.get("plugins", {}).get("updater"))
-        PY
-        echo ""
-        echo "---- existing updater artifacts (pre-build) ----"
-        find apps/desktop_tauri/src-tauri/target -name "*.app.tar.gz" -o -name "*.sig" -o -name "*-setup.exe.sig" 2>/dev/null | head -n 200 || true
-        echo "-----------------------------------------------"
-
     # - name: Set Tauri log level
     #   run: echo "TAURI_LOG=trace" >> $GITHUB_ENV
     #   shell: bash

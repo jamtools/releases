@@ -125,7 +125,6 @@ jobs:
               with open(latest_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 latest_version = data.get("version")
-                print(f"DEBUG latest_version repr: {latest_version!r}", file=sys.stderr)
             except Exception as e:
               print(f"WARNING: failed to parse latest.json from R2: {e}", file=sys.stderr)
 
