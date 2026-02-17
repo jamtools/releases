@@ -39,10 +39,11 @@ on:
       site_url:
         description: 'Site URL'
         required: true
-      publish_version:
-        description: 'Publish version'
+      publish:
+        description: 'Publish release artifacts (same behavior as new-commit-on-main)'
         required: false
-        type: string
+        type: boolean
+        default: false
       enable_debug:
         description: 'Enable debug'
         required: false
@@ -61,7 +62,7 @@ jobs:
       shell: bash
       env:
         PUBLIC_URL: ${{ secrets.R2_DESKTOP_BUILDS_PUBLIC_URL }}
-        OVERRIDE_PUBLISH_VERSION: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_version || '' }}
+        OVERRIDE_PUBLISH_VERSION: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.publish_version || '' }}
         AWS_ACCESS_KEY_ID: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
         AWS_DEFAULT_REGION: auto
@@ -174,18 +175,18 @@ jobs:
       tauri_args: ${{ matrix.args }}
       tauri_target: ${{ matrix.tauri_target }}
       # pkg_target: ${{ matrix.pkg_target }}
-      sign_app: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.sign_app == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
+      sign_app: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.publish == 'true' || github.event.inputs.sign_app == 'true')) || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
       target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
       profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) || 'preview' }}
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) || 'https://staging.songdrive.app' }}
-      publish_version: ${{ needs.compute_publish_version.outputs.publish_version }}
+      publish_version: ${{ ((github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main')) && needs.compute_publish_version.outputs.publish_version || '' }}
       # enable_debug: true
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
       enable_custom_site_url: false
-      enable_tauri_updates: ${{ github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main' }}
+      enable_tauri_updates: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
 
   publish_latest_manifest:
-    if: github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main'
+    if: (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
     needs: [compute_publish_version, build_desktop_all]
     runs-on: ubuntu-latest
     steps:
