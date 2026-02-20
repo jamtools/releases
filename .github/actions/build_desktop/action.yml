@@ -53,15 +53,6 @@ inputs:
   azure_tenant_id:
     required: false
     description: 'Azure tenant ID for Windows code signing'
-  azure_signing_endpoint:
-    required: false
-    description: 'Azure Trusted Signing endpoint URL (e.g. https://eus.codesigning.azure.net)'
-  azure_signing_account_name:
-    required: false
-    description: 'Azure Trusted Signing account name'
-  azure_signing_cert_profile_name:
-    required: false
-    description: 'Azure Trusted Signing certificate profile name'
   tauri_signing_private_key:
     required: false
     description: 'Tauri updater signing private key'
@@ -211,9 +202,7 @@ runs:
         echo "AZURE_CLIENT_ID=${{ inputs.azure_client_id }}" >> $GITHUB_ENV
         echo "AZURE_CLIENT_SECRET=${{ inputs.azure_client_secret }}" >> $GITHUB_ENV
         echo "AZURE_TENANT_ID=${{ inputs.azure_tenant_id }}" >> $GITHUB_ENV
-        echo "AZURE_SIGNING_ENDPOINT=${{ inputs.azure_signing_endpoint }}" >> $GITHUB_ENV
-        echo "AZURE_SIGNING_ACCOUNT_NAME=${{ inputs.azure_signing_account_name }}" >> $GITHUB_ENV
-        echo "AZURE_SIGNING_CERT_PROFILE_NAME=${{ inputs.azure_signing_cert_profile_name }}" >> $GITHUB_ENV
+        echo "SIGNTOOL_PATH=C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe" >> $GITHUB_ENV
 
     - name: Install trusted-signing-cli (Windows)
       if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.azure_client_id != ''

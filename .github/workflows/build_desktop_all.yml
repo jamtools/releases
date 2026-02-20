@@ -163,7 +163,7 @@ jobs:
           #   args: ''
           #   tauri_target: ''
           #   # pkg_target: 'node20-linux-x64'
-          - platform: 'windows-11-arm'
+          - platform: 'windows-latest'
             args: ''
             tauri_target: ''
             # pkg_target: 'node20-windows-x64'
@@ -186,7 +186,7 @@ jobs:
       enable_tauri_updates: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
 
   publish_latest_manifest:
-    if: (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
+    if: false
     needs: [compute_publish_version, build_desktop_all]
     runs-on: ubuntu-latest
     steps:
