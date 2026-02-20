@@ -69,7 +69,7 @@ jobs:
           #   args: ''
           #   tauri_target: ''
           #   # pkg_target: 'node20-linux-x64'
-          # - platform: 'windows-latest'
+          # - platform: 'windows-11-arm'
           #   args: ''
           #   tauri_target: ''
           #   # pkg_target: 'node20-windows-x64'
