@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
-        # os: [ubuntu-latest, windows-latest]
+        os: [windows-11-arm]
+        # os: [ubuntu-latest, windows-11-arm]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -42,7 +42,7 @@ jobs:
       - name: Build Tauri App
         uses: ./.github/composite-actions/.github/actions/build_desktop
         with:
-            platform: ${{ matrix.os == 'ubuntu-latest' && 'ubuntu-22.04' || 'windows-latest' }}
+            platform: ${{ matrix.os == 'ubuntu-latest' && 'ubuntu-22.04' || matrix.os }}
             tauri_args: ''
             tauri_target: ''
             sign_app: false
@@ -84,7 +84,7 @@ jobs:
 
       # ---- Windows-only bits: EdgeDriver + (optional) WebView2 runtime ----
       - name: Install matching EdgeDriver
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           cargo install --git https://github.com/chippers/msedgedriver-tool
@@ -93,14 +93,14 @@ jobs:
 
       # Optional WebView2
       # - name: Install WebView2 Runtime (silent)
-      #   if: matrix.os == 'windows-latest'
+      #   if: runner.os == 'Windows'
       #   shell: bash
       #   run: |
       #     curl -L -o webview2.exe https://go.microsoft.com/fwlink/p/?LinkId=2124703
       #     ./webview2.exe /silent /install
 
       - name: Run E2E via start-server-and-test
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           npx --yes start-server-and-test@2 \

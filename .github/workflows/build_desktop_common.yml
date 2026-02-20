@@ -179,7 +179,7 @@ jobs:
           echo "Sanitized filename: $SANITIZED_FILENAME"
           echo "Final filename: $NEW_FILENAME"
 
-        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+        elif [[ "${{ inputs.platform }}" == "windows-"* ]]; then
           echo "Processing Windows platform..."
 
           # Find EXE file with priority order: setup files first, then any exe
@@ -216,7 +216,7 @@ jobs:
 
         else
           echo "ERROR: Unsupported platform: ${{ inputs.platform }}"
-          echo "Supported platforms: macos-latest, windows-latest (and variants)"
+          echo "Supported platforms: macos-latest, windows-11-arm (and other windows-* variants)"
           exit 1
         fi
 
@@ -270,7 +270,7 @@ jobs:
 
           echo "Staged updater payload: staging/$UPDATER_PAYLOAD_FILENAME"
           echo "Staged updater signature: staging/$UPDATER_SIGNATURE_FILENAME"
-        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+        elif [[ "${{ inputs.platform }}" == "windows-"* ]]; then
           echo "Locating Windows updater signature for selected installer..."
 
           EXE_SIG_FILE="${EXE_FILE}.sig"
@@ -413,7 +413,7 @@ jobs:
         # Determine platform name for Discord message
         if [[ "${{ inputs.platform }}" == "macos-latest" || "${{ inputs.platform }}" == "macos-"* ]]; then
           PLATFORM_NAME="macOS"
-        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+        elif [[ "${{ inputs.platform }}" == "windows-"* ]]; then
           PLATFORM_NAME="Windows"
         else
           PLATFORM_NAME="${{ inputs.platform }}"
