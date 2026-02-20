@@ -98,6 +98,9 @@ jobs:
         azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
         azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
         azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+        azure_signing_endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+        azure_signing_account_name: ${{ secrets.AZURE_SIGNING_ACCOUNT_NAME }}
+        azure_signing_cert_profile_name: ${{ secrets.AZURE_SIGNING_CERT_PROFILE_NAME }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
         enable_debug: ${{ inputs.enable_debug }}
         enable_custom_site_url: ${{ inputs.enable_custom_site_url }}
