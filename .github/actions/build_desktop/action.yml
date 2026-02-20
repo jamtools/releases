@@ -44,6 +44,12 @@ inputs:
   apple_team_id:
     required: false
     description: 'Apple team ID'
+  windows_certificate:
+    required: false
+    description: 'Windows code signing certificate (base64-encoded PFX)'
+  windows_certificate_password:
+    required: false
+    description: 'Windows code signing certificate password'
   tauri_signing_private_key:
     required: false
     description: 'Tauri updater signing private key'
@@ -185,6 +191,18 @@ runs:
           echo "APPLE_PASSWORD=${{ inputs.apple_password }}" >> $GITHUB_ENV
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
         fi
+
+    - name: Import Windows code signing certificate
+      if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.windows_certificate != ''
+      shell: pwsh
+      run: |
+        $pfxBytes = [Convert]::FromBase64String("${{ inputs.windows_certificate }}")
+        $pfxPath = Join-Path $env:RUNNER_TEMP "signing_cert.pfx"
+        [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+        $securePassword = ConvertTo-SecureString -String "${{ inputs.windows_certificate_password }}" -Force -AsPlainText
+        $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
+        Remove-Item $pfxPath -Force
+        echo "WINDOWS_CERTIFICATE_THUMBPRINT=$($cert.Thumbprint)" >> $env:GITHUB_ENV
 
     - name: Set Tauri signing environment variables
       shell: bash

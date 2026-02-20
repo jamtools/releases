@@ -95,6 +95,8 @@ jobs:
         apple_id: ${{ secrets.APPLE_ID }}
         apple_password: ${{ secrets.APPLE_PASSWORD }}
         apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+        windows_certificate: ${{ secrets.WINDOWS_CERTIFICATE }}
+        windows_certificate_password: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
         enable_debug: ${{ inputs.enable_debug }}
         enable_custom_site_url: ${{ inputs.enable_custom_site_url }}
