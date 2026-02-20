@@ -44,12 +44,24 @@ inputs:
   apple_team_id:
     required: false
     description: 'Apple team ID'
-  windows_certificate:
+  azure_client_id:
     required: false
-    description: 'Windows code signing certificate (base64-encoded PFX)'
-  windows_certificate_password:
+    description: 'Azure app registration client ID for Windows code signing'
+  azure_client_secret:
     required: false
-    description: 'Windows code signing certificate password'
+    description: 'Azure app registration client secret for Windows code signing'
+  azure_tenant_id:
+    required: false
+    description: 'Azure tenant ID for Windows code signing'
+  azure_signing_endpoint:
+    required: false
+    description: 'Azure Trusted Signing endpoint URL (e.g. https://eus.codesigning.azure.net)'
+  azure_signing_account_name:
+    required: false
+    description: 'Azure Trusted Signing account name'
+  azure_signing_cert_profile_name:
+    required: false
+    description: 'Azure Trusted Signing certificate profile name'
   tauri_signing_private_key:
     required: false
     description: 'Tauri updater signing private key'
@@ -192,17 +204,10 @@ runs:
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
         fi
 
-    - name: Import Windows code signing certificate
-      if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.windows_certificate != ''
-      shell: pwsh
-      run: |
-        $pfxBytes = [Convert]::FromBase64String("${{ inputs.windows_certificate }}")
-        $pfxPath = Join-Path $env:RUNNER_TEMP "signing_cert.pfx"
-        [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
-        $securePassword = ConvertTo-SecureString -String "${{ inputs.windows_certificate_password }}" -Force -AsPlainText
-        $cert = Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
-        Remove-Item $pfxPath -Force
-        echo "WINDOWS_CERTIFICATE_THUMBPRINT=$($cert.Thumbprint)" >> $env:GITHUB_ENV
+    - name: Install trusted-signing-cli (Windows)
+      if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.azure_client_id != ''
+      shell: bash
+      run: cargo install trusted-signing-cli
 
     - name: Set Tauri signing environment variables
       shell: bash
@@ -222,6 +227,13 @@ runs:
       run: npm run tauri build -- ${{ inputs.tauri_args }} ${{ ((inputs.enable_debug == 'true') && '--debug') || '' }}
       working-directory: ./apps/desktop_tauri
       shell: bash
+      env:
+        AZURE_CLIENT_ID: ${{ inputs.azure_client_id }}
+        AZURE_CLIENT_SECRET: ${{ inputs.azure_client_secret }}
+        AZURE_TENANT_ID: ${{ inputs.azure_tenant_id }}
+        AZURE_SIGNING_ENDPOINT: ${{ inputs.azure_signing_endpoint }}
+        AZURE_SIGNING_ACCOUNT_NAME: ${{ inputs.azure_signing_account_name }}
+        AZURE_SIGNING_CERT_PROFILE_NAME: ${{ inputs.azure_signing_cert_profile_name }}
 
     # - uses: tauri-apps/tauri-action@v0
     #   env:
