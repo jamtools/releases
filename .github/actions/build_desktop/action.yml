@@ -204,6 +204,17 @@ runs:
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
         fi
 
+    - name: Set Windows signing environment variables
+      shell: bash
+      if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.azure_client_id != ''
+      run: |
+        echo "AZURE_CLIENT_ID=${{ inputs.azure_client_id }}" >> $GITHUB_ENV
+        echo "AZURE_CLIENT_SECRET=${{ inputs.azure_client_secret }}" >> $GITHUB_ENV
+        echo "AZURE_TENANT_ID=${{ inputs.azure_tenant_id }}" >> $GITHUB_ENV
+        echo "AZURE_SIGNING_ENDPOINT=${{ inputs.azure_signing_endpoint }}" >> $GITHUB_ENV
+        echo "AZURE_SIGNING_ACCOUNT_NAME=${{ inputs.azure_signing_account_name }}" >> $GITHUB_ENV
+        echo "AZURE_SIGNING_CERT_PROFILE_NAME=${{ inputs.azure_signing_cert_profile_name }}" >> $GITHUB_ENV
+
     - name: Install trusted-signing-cli (Windows)
       if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.azure_client_id != ''
       shell: bash
@@ -227,13 +238,6 @@ runs:
       run: npm run tauri build -- ${{ inputs.tauri_args }} ${{ ((inputs.enable_debug == 'true') && '--debug') || '' }}
       working-directory: ./apps/desktop_tauri
       shell: bash
-      env:
-        AZURE_CLIENT_ID: ${{ inputs.azure_client_id }}
-        AZURE_CLIENT_SECRET: ${{ inputs.azure_client_secret }}
-        AZURE_TENANT_ID: ${{ inputs.azure_tenant_id }}
-        AZURE_SIGNING_ENDPOINT: ${{ inputs.azure_signing_endpoint }}
-        AZURE_SIGNING_ACCOUNT_NAME: ${{ inputs.azure_signing_account_name }}
-        AZURE_SIGNING_CERT_PROFILE_NAME: ${{ inputs.azure_signing_cert_profile_name }}
 
     # - uses: tauri-apps/tauri-action@v0
     #   env:
