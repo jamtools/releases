@@ -46,6 +46,10 @@ on:
         required: false
         type: boolean
         default: false
+      publish_to_r2:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build_tauri:
@@ -295,7 +299,7 @@ jobs:
         echo "Installer extraction completed successfully!"
 
     - name: Upload installer to S3 compatible
-      if: inputs.publish_version != ''
+      if: inputs.publish_to_r2
       uses: shallwefootball/s3-upload-action@master
       with:
           aws_key_id: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
@@ -404,7 +408,7 @@ jobs:
         path: updater-platform-manifest
 
     - name: Send Discord message
-      if: inputs.publish_version != ''
+      if: inputs.publish_to_r2
       shell: bash
       run: |
         # Determine platform name for Discord message
