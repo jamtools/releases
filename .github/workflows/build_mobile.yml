@@ -83,7 +83,7 @@ jobs:
         ref: ${{ github.sha }}
 
     - name: Build Mobile App with EAS
-      if: ${{ github.event.action != 'new-commit-on-main' }}
+      # if: ${{ github.event.action != 'new-commit-on-main' }}
       uses: ./.github/composite-actions/.github/actions/build_mobile_eas
       with:
         local: ${{ (github.event.action == 'build-for-pr' && !github.event.client_payload.run_on_eas) || (github.event.action != 'build-for-pr' && !inputs.run_on_eas) }}
@@ -95,18 +95,18 @@ jobs:
         asc_app_id: ${{ secrets.ASC_APP_ID }}
         discord_webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
 
-    - name: Build Mobile App and Submit with EAS
-      if: ${{ github.event.action == 'new-commit-on-main' }}
-      uses: ./.github/composite-actions/.github/actions/build_mobile_eas
-      with:
-        local: false
-        platform: 'all'
-        profile: 'production'
-        submit: false
-        output_logs: false
-        expo-token: ${{ secrets.EXPO_TOKEN }}
-        asc_app_id: ${{ secrets.ASC_APP_ID }}
-        discord_webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
+    # - name: Build Mobile App and Submit with EAS
+    #   if: ${{ github.event.action == 'new-commit-on-main' }}
+    #   uses: ./.github/composite-actions/.github/actions/build_mobile_eas
+    #   with:
+    #     local: false
+    #     platform: 'all'
+    #     profile: 'production'
+    #     submit: false
+    #     output_logs: false
+    #     expo-token: ${{ secrets.EXPO_TOKEN }}
+    #     asc_app_id: ${{ secrets.ASC_APP_ID }}
+    #     discord_webhook_url: ${{ secrets.DISCORD_APP_BUILDS_WEBHOOK_URL }}
 
     # - name: Build Mobile App with Gradle
     #   uses: ./.github/composite-actions/.github/actions/build_mobile_gradle
