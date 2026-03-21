@@ -161,6 +161,27 @@ jobs:
         path: manifests
         merge-multiple: true
 
+    - name: Fetch existing latest.json from R2
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
+        AWS_DEFAULT_REGION: auto
+        AWS_EC2_METADATA_DISABLED: true
+        R2_BUCKET: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
+        R2_ENDPOINT: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
+      run: |
+        if aws s3api get-object \
+          --bucket "${R2_BUCKET}" \
+          --key "builds/desktop/latest.json" \
+          --endpoint-url "${R2_ENDPOINT}" \
+          existing_latest.json >/dev/null 2>&1; then
+          echo "Fetched existing latest.json"
+        else
+          echo "No existing latest.json found, will create fresh"
+          echo '{}' > existing_latest.json
+        fi
+
     - name: Build builds/desktop/latest.json
       id: build_latest
       shell: bash
@@ -177,8 +198,11 @@ jobs:
         publish_version = os.environ["PUBLISH_VERSION"].strip()
         pub_date = os.environ["PUB_DATE"].strip()
 
-        platforms = {}
-        notes = None
+        # Start with existing platforms so non-Windows entries are preserved
+        with open("existing_latest.json", "r", encoding="utf-8") as f:
+          existing = json.load(f)
+        platforms = existing.get("platforms") or {}
+        notes = existing.get("notes") or None
 
         files = sorted(glob.glob("manifests/**/*.json", recursive=True))
         if not files:
@@ -193,7 +217,7 @@ jobs:
           if file_version and file_version != publish_version:
             raise RuntimeError(f"Manifest version mismatch: expected {publish_version}, got {file_version} in {fp}")
 
-          if notes is None and data.get("notes"):
+          if data.get("notes"):
             notes = data.get("notes")
 
           p = data.get("platforms") or {}
