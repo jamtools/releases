@@ -1,0 +1,61 @@
+name: Desktop Build Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      sign_app:
+        description: 'Sign app'
+        required: true
+        type: boolean
+        default: true
+      profile:
+        description: Build profile (development/preview/production)
+        type: choice
+        required: true
+        default: development
+        options:
+        - preview
+        - development
+        - production
+      custom_profile:
+        description: 'Custom build profile'
+        type: string
+        required: false
+      ref:
+        description: 'Ref to use in application repo'
+        required: false
+        default: 'main'
+      site_url:
+        description: 'Site URL'
+        required: true
+      enable_debug:
+        description: 'Enable debug'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build_desktop_windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'
+            args: ''
+            tauri_target: ''
+
+    uses: ./.github/workflows/build_desktop_common.yml
+    secrets: inherit
+    with:
+      platform: ${{ matrix.platform }}
+      tauri_args: ${{ matrix.args }}
+      tauri_target: ${{ matrix.tauri_target }}
+      sign_app: ${{ github.event.inputs.sign_app == 'true' }}
+      target_branch: ${{ (github.event.inputs.ref != '' && github.event.inputs.ref) || 'main' }}
+      profile: ${{ github.event.inputs.custom_profile || github.event.inputs.profile }}
+      site_url: ${{ github.event.inputs.site_url }}
+      publish_version: ${{ github.event.inputs.sign_app == 'true' && '0.0.0-test' || '' }}
+      enable_debug: ${{ github.event.inputs.enable_debug == 'true' }}
+      enable_custom_site_url: false
+      enable_tauri_updates: false
+      publish_to_r2: false
