@@ -44,6 +44,15 @@ on:
         required: false
         type: boolean
         default: false
+      platforms:
+        description: 'Platforms to build'
+        required: false
+        type: choice
+        default: all
+        options:
+        - all
+        - macos
+        - windows
       enable_debug:
         description: 'Enable debug'
         required: false
@@ -56,6 +65,7 @@ jobs:
     outputs:
       publish_version: ${{ steps.compute.outputs.publish_version }}
       pub_date: ${{ steps.compute.outputs.pub_date }}
+      matrix: ${{ steps.compute_matrix.outputs.matrix }}
     steps:
     - name: Compute publish version
       id: compute
@@ -144,29 +154,26 @@ jobs:
           f.write(f"pub_date={pub_date}\n")
         PY
 
+    - name: Compute build matrix
+      id: compute_matrix
+      shell: bash
+      run: |
+        PLATFORMS="${{ github.event.inputs.platforms || 'all' }}"
+        MACOS='{"platform":"macos-latest","args":"--target universal-apple-darwin","tauri_target":"universal-apple-darwin"}'
+        WINDOWS='{"platform":"windows-latest","args":"","tauri_target":""}'
+        if [ "$PLATFORMS" = "windows" ]; then
+          echo "matrix={\"include\":[$WINDOWS]}" >> "$GITHUB_OUTPUT"
+        elif [ "$PLATFORMS" = "macos" ]; then
+          echo "matrix={\"include\":[$MACOS]}" >> "$GITHUB_OUTPUT"
+        else
+          echo "matrix={\"include\":[$MACOS,$WINDOWS]}" >> "$GITHUB_OUTPUT"
+        fi
+
   build_desktop_all:
     needs: [compute_publish_version]
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: 'macos-latest'
-            args: '--target universal-apple-darwin'
-            tauri_target: 'universal-apple-darwin'
-            # tauri_target: 'aarch64-apple-darwin'
-            # pkg_target: 'node20-macos-arm64'
-          # - platform: 'macos-latest'
-          #   args: '--target x86_64-apple-darwin'
-          #   tauri_target: 'x86_64-apple-darwin'
-            # pkg_target: 'node20-macos-x64'
-          # - platform: 'ubuntu-22.04'
-          #   args: ''
-          #   tauri_target: ''
-          #   # pkg_target: 'node20-linux-x64'
-          - platform: 'windows-latest'
-            args: ''
-            tauri_target: ''
-            # pkg_target: 'node20-windows-x64'
+      matrix: ${{ fromJSON(needs.compute_publish_version.outputs.matrix) }}
 
     uses: ./.github/workflows/build_desktop_common.yml
     secrets: inherit
@@ -174,16 +181,16 @@ jobs:
       platform: ${{ matrix.platform }}
       tauri_args: ${{ matrix.args }}
       tauri_target: ${{ matrix.tauri_target }}
-      # pkg_target: ${{ matrix.pkg_target }}
       sign_app: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.publish == 'true' || github.event.inputs.sign_app == 'true')) || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
       target_branch: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.ref != '' && github.event.inputs.ref) || (github.event_name == 'repository_dispatch' && github.event.client_payload.sha != '' && github.event.client_payload.sha) || 'main' }}
       profile: ${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.custom_profile || github.event.inputs.profile)) || (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) || 'preview' }}
       site_url: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.site_url) || (github.event_name == 'repository_dispatch' && github.event.client_payload.site_url) || 'https://staging.songdrive.app' }}
-      publish_version: ${{ ((github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main')) && needs.compute_publish_version.outputs.publish_version || '' }}
+      publish_version: ${{ ((github.event_name == 'workflow_dispatch' && (github.event.inputs.publish == 'true' || github.event.inputs.sign_app == 'true')) || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main')) && needs.compute_publish_version.outputs.publish_version || '' }}
       # enable_debug: true
       enable_debug: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.enable_debug == 'true') }}
       enable_custom_site_url: false
       enable_tauri_updates: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
+      publish_to_r2: ${{ (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true') || (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') }}
 
   publish_latest_manifest:
     if: (github.event_name == 'repository_dispatch' && github.event.action == 'new-commit-on-main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
@@ -196,6 +203,27 @@ jobs:
         pattern: updater-platform-manifest-*
         path: manifests
         merge-multiple: true
+
+    - name: Fetch existing latest.json from R2
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_DESKTOP_APP_KEY_SECRET }}
+        AWS_DEFAULT_REGION: auto
+        AWS_EC2_METADATA_DISABLED: true
+        R2_BUCKET: ${{ secrets.R2_DESKTOP_APP_BUCKET }}
+        R2_ENDPOINT: ${{ secrets.R2_DESKTOP_APP_ENDPOINT }}
+      run: |
+        if aws s3api get-object \
+          --bucket "${R2_BUCKET}" \
+          --key "builds/desktop/latest.json" \
+          --endpoint-url "${R2_ENDPOINT}" \
+          existing_latest.json >/dev/null 2>&1; then
+          echo "Fetched existing latest.json"
+        else
+          echo "No existing latest.json found, will create fresh"
+          echo '{}' > existing_latest.json
+        fi
 
     - name: Build builds/desktop/latest.json
       id: build_latest
@@ -213,8 +241,11 @@ jobs:
         publish_version = os.environ["PUBLISH_VERSION"].strip()
         pub_date = os.environ["PUB_DATE"].strip()
 
-        platforms = {}
-        notes = None
+        # Start with existing platforms so entries for platforms not built this run are preserved
+        with open("existing_latest.json", "r", encoding="utf-8") as f:
+          existing = json.load(f)
+        platforms = existing.get("platforms") or {}
+        notes = existing.get("notes") or None
 
         files = sorted(glob.glob("manifests/**/*.json", recursive=True))
         if not files:
@@ -229,7 +260,7 @@ jobs:
           if file_version and file_version != publish_version:
             raise RuntimeError(f"Manifest version mismatch: expected {publish_version}, got {file_version} in {fp}")
 
-          if notes is None and data.get("notes"):
+          if data.get("notes"):
             notes = data.get("notes")
 
           p = data.get("platforms") or {}

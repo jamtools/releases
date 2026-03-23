@@ -44,6 +44,15 @@ inputs:
   apple_team_id:
     required: false
     description: 'Apple team ID'
+  azure_client_id:
+    required: false
+    description: 'Azure app registration client ID for Windows code signing'
+  azure_client_secret:
+    required: false
+    description: 'Azure app registration client secret for Windows code signing'
+  azure_tenant_id:
+    required: false
+    description: 'Azure tenant ID for Windows code signing'
   tauri_signing_private_key:
     required: false
     description: 'Tauri updater signing private key'
@@ -160,6 +169,7 @@ runs:
       env:
         APP_PROFILE: ${{ inputs.profile }}
         PUBLISH_VERSION: ${{ inputs.publish_version }}
+        BUILD_E2E: ${{ inputs.build_e2e }}
 
     - name: Fetch Rust dependencies
       shell: bash
@@ -185,6 +195,20 @@ runs:
           echo "APPLE_PASSWORD=${{ inputs.apple_password }}" >> $GITHUB_ENV
           echo "APPLE_TEAM_ID=${{ inputs.apple_team_id }}" >> $GITHUB_ENV
         fi
+
+    - name: Set Windows signing environment variables
+      shell: bash
+      if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.azure_client_id != ''
+      run: |
+        echo "AZURE_CLIENT_ID=${{ inputs.azure_client_id }}" >> $GITHUB_ENV
+        echo "AZURE_CLIENT_SECRET=${{ inputs.azure_client_secret }}" >> $GITHUB_ENV
+        echo "AZURE_TENANT_ID=${{ inputs.azure_tenant_id }}" >> $GITHUB_ENV
+        echo "SIGNTOOL_PATH=C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe" >> $GITHUB_ENV
+
+    - name: Install trusted-signing-cli (Windows)
+      if: inputs.sign_app == 'true' && runner.os == 'Windows' && inputs.azure_client_id != ''
+      shell: bash
+      run: cargo install trusted-signing-cli
 
     - name: Set Tauri signing environment variables
       shell: bash

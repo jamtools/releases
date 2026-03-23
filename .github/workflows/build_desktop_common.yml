@@ -46,6 +46,10 @@ on:
         required: false
         type: boolean
         default: false
+      publish_to_r2:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build_tauri:
@@ -95,6 +99,9 @@ jobs:
         apple_id: ${{ secrets.APPLE_ID }}
         apple_password: ${{ secrets.APPLE_PASSWORD }}
         apple_team_id: ${{ secrets.APPLE_TEAM_ID }}
+        azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+        azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+        azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
         enable_debug: ${{ inputs.enable_debug }}
         enable_custom_site_url: ${{ inputs.enable_custom_site_url }}
@@ -173,7 +180,7 @@ jobs:
           echo "Sanitized filename: $SANITIZED_FILENAME"
           echo "Final filename: $NEW_FILENAME"
 
-        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+        elif [[ "${{ inputs.platform }}" == "windows-"* ]]; then
           echo "Processing Windows platform..."
 
           # Find EXE file with priority order: setup files first, then any exe
@@ -210,7 +217,7 @@ jobs:
 
         else
           echo "ERROR: Unsupported platform: ${{ inputs.platform }}"
-          echo "Supported platforms: macos-latest, windows-latest (and variants)"
+          echo "Supported platforms: macos-latest, windows-11-arm (and other windows-* variants)"
           exit 1
         fi
 
@@ -264,7 +271,7 @@ jobs:
 
           echo "Staged updater payload: staging/$UPDATER_PAYLOAD_FILENAME"
           echo "Staged updater signature: staging/$UPDATER_SIGNATURE_FILENAME"
-        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+        elif [[ "${{ inputs.platform }}" == "windows-"* ]]; then
           echo "Locating Windows updater signature for selected installer..."
 
           EXE_SIG_FILE="${EXE_FILE}.sig"
@@ -292,7 +299,7 @@ jobs:
         echo "Installer extraction completed successfully!"
 
     - name: Upload installer to S3 compatible
-      if: inputs.publish_version != ''
+      if: inputs.publish_to_r2
       uses: shallwefootball/s3-upload-action@master
       with:
           aws_key_id: ${{ secrets.R2_DESKTOP_APP_KEY_ID }}
@@ -401,13 +408,13 @@ jobs:
         path: updater-platform-manifest
 
     - name: Send Discord message
-      if: inputs.publish_version != ''
+      if: inputs.publish_to_r2
       shell: bash
       run: |
         # Determine platform name for Discord message
         if [[ "${{ inputs.platform }}" == "macos-latest" || "${{ inputs.platform }}" == "macos-"* ]]; then
           PLATFORM_NAME="macOS"
-        elif [[ "${{ inputs.platform }}" == "windows-latest" || "${{ inputs.platform }}" == "windows-"* ]]; then
+        elif [[ "${{ inputs.platform }}" == "windows-"* ]]; then
           PLATFORM_NAME="Windows"
         else
           PLATFORM_NAME="${{ inputs.platform }}"
