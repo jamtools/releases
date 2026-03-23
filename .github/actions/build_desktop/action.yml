@@ -169,6 +169,7 @@ runs:
       env:
         APP_PROFILE: ${{ inputs.profile }}
         PUBLISH_VERSION: ${{ inputs.publish_version }}
+        BUILD_E2E: ${{ inputs.build_e2e }}
 
     - name: Fetch Rust dependencies
       shell: bash
