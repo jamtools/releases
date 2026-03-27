@@ -322,7 +322,7 @@ jobs:
       shell: bash
       run: |
         # Get only the first line of the commit message
-        COMMIT_MSG=$(git log -1 --pretty=%B | head -n1)
+        COMMIT_MSG=$(git log -1 --pretty=%s)
         # Use delimiter syntax for proper escaping of special characters
         {
           echo "commit_message<<EOF"
