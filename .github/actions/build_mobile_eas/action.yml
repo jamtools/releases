@@ -17,6 +17,26 @@ inputs:
   local:
     description: 'Build the app locally in CI'
     required: false
+  install_command:
+    description: 'Command used to install dependencies'
+    required: false
+    default: 'pnpm install --frozen-lockfile'
+  build_command:
+    description: 'Command used to prepare the mobile webview bundle'
+    required: false
+    default: 'pnpm run build'
+  mobile_directory:
+    description: 'Relative path to the Expo app'
+    required: false
+    default: 'apps/mobile'
+  prebuild_command:
+    description: 'Command used for local Expo prebuilds'
+    required: false
+    default: 'npx expo prebuild'
+  site_url:
+    description: 'Site URL used by the mobile webview bundle'
+    required: false
+    default: ''
   output_logs:
     description: 'Output EAS build to logs (if false, sends to /dev/null)'
     required: false
@@ -38,6 +58,11 @@ runs:
       echo "submit: ${{ inputs.submit }}"
       echo "local: ${{ inputs.local }}"
       echo "output_logs: ${{ inputs.output_logs }}"
+      echo "install_command: ${{ inputs.install_command }}"
+      echo "build_command: ${{ inputs.build_command }}"
+      echo "mobile_directory: ${{ inputs.mobile_directory }}"
+      echo "prebuild_command: ${{ inputs.prebuild_command }}"
+      echo "site_url: ${{ inputs.site_url }}"
     shell: bash
   - name: Install pnpm
     uses: pnpm/action-setup@v4
@@ -59,13 +84,15 @@ runs:
 
   - name: Install modules
     shell: bash
-    run: pnpm i
+    run: ${{ inputs.install_command }}
 
   - name: Build app
     shell: bash
-    run: pnpm run build
+    run: ${{ inputs.build_command }}
     env:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
       APP_PROFILE: ${{ inputs.profile }}
       EXPO_APP_PROFILE: ${{ inputs.profile }}
 
@@ -74,8 +101,10 @@ runs:
     uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
     with:
       profile: ${{ inputs.profile }}
-      working-directory: apps/mobile
+      working-directory: ${{ inputs.mobile_directory }}
     env:
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
       APP_PROFILE: ${{ inputs.profile }}
       EXPO_APP_PROFILE: ${{ inputs.profile }}
 
@@ -83,7 +112,7 @@ runs:
     if: ${{ inputs.discord_webhook_url != '' }}
     shell: bash
     run: |
-      FINGERPRINT_FILE="apps/mobile/.expo-fingerprint.json"
+      FINGERPRINT_FILE="${{ inputs.mobile_directory }}/.expo-fingerprint.json"
       if [ -f "$FINGERPRINT_FILE" ]; then
         MAIN_ANDROID=$(jq -r '.android' "$FINGERPRINT_FILE")
         MAIN_IOS=$(jq -r '.ios' "$FINGERPRINT_FILE")
@@ -121,27 +150,40 @@ runs:
   - name: Prebuild expo app
     if: ${{ inputs.local == 'true' }}
     shell: bash
-    working-directory: apps/mobile
-    run: npx expo prebuild
+    working-directory: ${{ inputs.mobile_directory }}
+    run: ${{ inputs.prebuild_command }}
 
   - name: Run eas locally
     shell: bash
     if: ${{ inputs.local == 'true' }}
-    working-directory: apps/mobile
+    working-directory: ${{ inputs.mobile_directory }}
     env:
       EXPO_GITHUB_ACTIONS_RUN: true
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
     run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} --local
 
   - name: Send build to eas
     shell: bash
     if: ${{ inputs.local != 'true' && (inputs.submit != 'true' || inputs.profile != 'production') }}
-    working-directory: apps/mobile
+    working-directory: ${{ inputs.mobile_directory }}
+    env:
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
     run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ inputs.output_logs == 'true' && '' || '1>/dev/null' }}
 
   - name: Build & submit mobile
     shell: bash
     if: ${{ inputs.submit == 'true' && inputs.profile == 'production' }}
-    working-directory: apps/mobile
+    working-directory: ${{ inputs.mobile_directory }}
     env:
       ASC_APP_ID: ${{ inputs.asc_app_id }}
+      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      APP_PROFILE: ${{ inputs.profile }}
+      EXPO_APP_PROFILE: ${{ inputs.profile }}
     run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ inputs.output_logs == 'true' && '' || '1>/dev/null' }}

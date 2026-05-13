@@ -14,6 +14,22 @@ inputs:
   site_url:
     description: 'Site URL'
     required: true
+  message:
+    description: 'Update message'
+    required: false
+    default: ''
+  install_command:
+    description: 'Command used to install dependencies'
+    required: false
+    default: 'pnpm install --frozen-lockfile'
+  build_command:
+    description: 'Command used to prepare the mobile webview bundle'
+    required: false
+    default: 'pnpm run build'
+  mobile_directory:
+    description: 'Relative path to the Expo app'
+    required: false
+    default: 'apps/mobile'
   discord_webhook_url:
     description: 'Discord webhook URL for fingerprint change notifications'
     required: false
@@ -25,7 +41,10 @@ runs:
     run: |
       echo "platform: ${{ inputs.platform }}"
       echo "profile: ${{ inputs.profile }}"
-      echo "submit: ${{ inputs.submit }}"
+      echo "message: ${{ inputs.message }}"
+      echo "install_command: ${{ inputs.install_command }}"
+      echo "build_command: ${{ inputs.build_command }}"
+      echo "mobile_directory: ${{ inputs.mobile_directory }}"
     shell: bash
   - name: Install pnpm
     uses: pnpm/action-setup@v4
@@ -46,11 +65,11 @@ runs:
 
   - name: Install modules
     shell: bash
-    run: pnpm i
+    run: ${{ inputs.install_command }}
 
   - name: Build app
     shell: bash
-    run: pnpm run build
+    run: ${{ inputs.build_command }}
     env:
       SPRINGBOARD_PLATFORM_VARIANT: mobile
       PUBLIC_SITE_URL: ${{ inputs.site_url }}
@@ -63,7 +82,7 @@ runs:
     uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
     with:
       profile: ${{ inputs.profile }}
-      working-directory: apps/mobile
+      working-directory: ${{ inputs.mobile_directory }}
     env:
       PUBLIC_SITE_URL: ${{ inputs.site_url }}
       EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
@@ -74,7 +93,7 @@ runs:
     if: ${{ inputs.discord_webhook_url != '' }}
     shell: bash
     run: |
-      FINGERPRINT_FILE="apps/mobile/.expo-fingerprint.json"
+      FINGERPRINT_FILE="${{ inputs.mobile_directory }}/.expo-fingerprint.json"
       if [ -f "$FINGERPRINT_FILE" ]; then
         MAIN_ANDROID=$(jq -r '.android' "$FINGERPRINT_FILE")
         MAIN_IOS=$(jq -r '.ios' "$FINGERPRINT_FILE")
@@ -111,10 +130,13 @@ runs:
 
   - name: Send update to eas
     shell: bash
-    working-directory: apps/mobile
+    working-directory: ${{ inputs.mobile_directory }}
     run: |
-      LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-      eas update --non-interactive --channel=${{ (inputs.profile == 'production' && 'beta-production') || inputs.profile }} --message="$LATEST_COMMIT_MESSAGE" --environment=${{ (inputs.profile == 'production' && 'production') || 'preview' }} --platform=${{ inputs.platform }}
+      UPDATE_MESSAGE="${{ inputs.message }}"
+      if [ -z "$UPDATE_MESSAGE" ]; then
+        UPDATE_MESSAGE="$(git log -1 --pretty=%B)"
+      fi
+      eas update --non-interactive --channel=${{ (inputs.profile == 'production' && 'beta-production') || inputs.profile }} --message="$UPDATE_MESSAGE" --environment=${{ (inputs.profile == 'production' && 'production') || 'preview' }} --platform=${{ inputs.platform }}
     env:
       PUBLIC_SITE_URL: ${{ inputs.site_url }}
       EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
