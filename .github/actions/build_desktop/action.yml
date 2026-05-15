@@ -101,12 +101,12 @@ runs:
         echo "TMP=$RUNNER_TEMP"    >> "$GITHUB_ENV"
 
     - name: Install pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v6
       with:
         version: 10.15.0
 
     - name: Install Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 20
         cache: 'pnpm'
@@ -119,6 +119,8 @@ runs:
       with:
         workspaces: apps/desktop_tauri/src-tauri
         cache-targets: true
+        cache-bin: false
+        prefix-key: v1-rust
         add-job-id-key: false
 
     - name: Install OS dependencies (ubuntu only)

@@ -41,7 +41,6 @@ on:
       enable_custom_site_url:
         required: true
         type: boolean
-        default: false
       enable_tauri_updates:
         required: false
         type: boolean
@@ -68,14 +67,14 @@ jobs:
         echo "enable_custom_site_url: ${{ inputs.enable_custom_site_url }}"
 
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         repository: ${{ secrets.REPO }}
         token: ${{ secrets.REPO_TOKEN }}
         ref: ${{ inputs.target_branch }}
 
     - name: Checkout releases repo into `.github/composite-actions`
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         repository: jamtools/releases
         path: .github/composite-actions
