@@ -109,7 +109,7 @@ runs:
       EXPO_APP_PROFILE: ${{ inputs.profile }}
 
   - name: Check fingerprint changes and notify
-    if: ${{ inputs.discord_webhook_url != '' }}
+    if: ${{ inputs.discord_webhook_url != '' && inputs.profile == 'production' }}
     shell: bash
     run: |
       FINGERPRINT_FILE="${{ inputs.mobile_directory }}/.expo-fingerprint.json"
