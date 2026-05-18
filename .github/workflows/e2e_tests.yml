@@ -36,5 +36,3 @@ jobs:
 
     - name: Run WDIO tests
       uses: ./.github/composite-actions/.github/actions/wdio_e2e
-      with:
-        browser: chrome

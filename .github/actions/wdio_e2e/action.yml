@@ -1,11 +1,6 @@
 name: Run WebdriverIO tests
 description: A composite action to run WebdriverIO tests
 
-inputs:
-  browser:
-    description: 'Which browser to test with'
-    required: false
-
 runs:
   using: 'composite'
   steps:
@@ -31,7 +26,7 @@ runs:
 
   - name: Install test modules
     shell: bash
-    run: cd tests-e2e && npm i
+    run: pnpm -C tests-e2e install --frozen-lockfile
 
   - name: Build app
     shell: bash
@@ -41,7 +36,7 @@ runs:
 
   - name: Run tests
     shell: bash
-    run: cd tests-e2e && npm test
+    run: pnpm -C tests-e2e test
     env:
       CI: true
 
