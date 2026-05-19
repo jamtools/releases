@@ -174,7 +174,11 @@ runs:
       EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
       APP_PROFILE: ${{ inputs.profile }}
       EXPO_APP_PROFILE: ${{ inputs.profile }}
-    run: eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ inputs.output_logs == 'true' && '' || '1>/dev/null' }}
+    run: |
+      if [[ "${{ inputs.output_logs }}" != "true" ]]; then
+        exec >/dev/null 2>&1
+      fi
+      eas build --non-interactive --wait --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
 
   - name: Build & submit mobile
     shell: bash
@@ -186,4 +190,8 @@ runs:
       EXPO_PUBLIC_SITE_URL: ${{ inputs.site_url }}
       APP_PROFILE: ${{ inputs.profile }}
       EXPO_APP_PROFILE: ${{ inputs.profile }}
-    run: eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }} ${{ inputs.output_logs == 'true' && '' || '1>/dev/null' }}
+    run: |
+      if [[ "${{ inputs.output_logs }}" != "true" ]]; then
+        exec >/dev/null 2>&1
+      fi
+      eas build --non-interactive --wait --auto-submit --platform=${{ inputs.platform }} --profile=${{ inputs.profile }}
