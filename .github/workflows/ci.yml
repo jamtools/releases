@@ -68,7 +68,7 @@ jobs:
         ref: ${{ env.TARGET_BRANCH }}
 
     - name: Build Docker image
-      run: docker compose build
+      run: docker buildx bake --set '*.output=type=cacheonly'
       env:
         PORT: 1337
   types:
