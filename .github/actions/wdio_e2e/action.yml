@@ -1,48 +1,66 @@
 name: Run WebdriverIO tests
 description: A composite action to run WebdriverIO tests
 
+inputs:
+  install_command:
+    description: Command used to install app dependencies
+    required: false
+    default: pnpm install --frozen-lockfile
+  test_install_command:
+    description: Command used to install tests-e2e dependencies
+    required: false
+    default: npm --prefix tests-e2e ci
+  build_command:
+    description: Command used to build the app for E2E
+    required: false
+    default: pnpm run build-e2e
+  test_command:
+    description: Command used to run WebdriverIO tests
+    required: false
+    default: npm --prefix tests-e2e test
+
 runs:
-  using: 'composite'
+  using: composite
   steps:
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: stable
 
-  - name: Install Chromium
-    shell: bash
-    run: sudo apt-get install -y chromium-browser
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10.15.0
 
-  - name: Install pnpm
-    uses: pnpm/action-setup@v4
-    with:
-      version: 10.15.0
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
 
-  - name: Install Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: 20
-      cache: 'pnpm'
+    - name: Install modules
+      shell: bash
+      run: ${{ inputs.install_command }}
 
-  - name: Install modules
-    shell: bash
-    run: pnpm i
+    - name: Install test modules
+      shell: bash
+      run: ${{ inputs.test_install_command }}
 
-  - name: Install test modules
-    shell: bash
-    run: pnpm -C tests-e2e install --frozen-lockfile
+    - name: Build app
+      shell: bash
+      run: ${{ inputs.build_command }}
+      env:
+        SPRINGBOARD_PLATFORM_VARIANT: main
 
-  - name: Build app
-    shell: bash
-    run: pnpm run build-e2e
-    env:
-      SPRINGBOARD_PLATFORM_VARIANT: main
+    - name: Run tests
+      shell: bash
+      run: ${{ inputs.test_command }}
+      env:
+        CI: true
 
-  - name: Run tests
-    shell: bash
-    run: pnpm -C tests-e2e test
-    env:
-      CI: true
-
-  - name: Upload screenshots
-    if: failure()
-    uses: actions/upload-artifact@v4
-    with:
-      name: screenshots
-      path: tests-e2e/screenshots
+    - name: Upload screenshots
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: screenshots
+        path: tests-e2e/screenshots

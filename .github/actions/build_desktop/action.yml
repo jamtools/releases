@@ -71,6 +71,10 @@ inputs:
   enable_tauri_updates:
     required: false
     description: 'Enable Tauri auto-updates'
+  install_command:
+    required: false
+    description: 'Command used to install project node modules'
+    default: 'pnpm i'
 
 runs:
   using: 'composite'
@@ -87,6 +91,7 @@ runs:
         echo "site_url: ${{ inputs.site_url }}"
         echo "enable_debug: ${{ inputs.enable_debug }}"
         echo "enable_custom_site_url: ${{ inputs.enable_custom_site_url }}"
+        echo "install_command: ${{ inputs.install_command }}"
 
     - name: Normalize temp for bash + Node on Windows
       if: runner.os == 'Windows'
@@ -101,12 +106,12 @@ runs:
         echo "TMP=$RUNNER_TEMP"    >> "$GITHUB_ENV"
 
     - name: Install pnpm
-      uses: pnpm/action-setup@v6
+      uses: pnpm/action-setup@v4
       with:
         version: 10.15.0
 
     - name: Install Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: 'pnpm'
@@ -132,7 +137,7 @@ runs:
 
     - name: Install project node modules
       shell: bash
-      run: pnpm i
+      run: ${{ inputs.install_command }}
 
     - name: Populate e2e env vars (safe)
       if: inputs.build_e2e
