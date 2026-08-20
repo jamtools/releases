@@ -20,13 +20,14 @@ on:
         - android
         - ios
       profile:
-        description: EAS build profile (preview/development/production)
+        description: EAS build profile (preview/development/adhoc-provision-production/production)
         type: choice
         required: true
         default: preview
         options:
         - preview
         - development
+        - adhoc-provision-production
         - production
       run_on_eas:
         description: Run build on eas? Will run locally in CI if false

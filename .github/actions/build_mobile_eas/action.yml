@@ -9,7 +9,7 @@ inputs:
     description: 'Platform to build for (all/android/ios)'
     required: true
   profile:
-    description: 'EAS build profile (preview/development/production)'
+    description: 'EAS build profile (preview/development/adhoc-provision-production/production)'
     required: true
   submit:
     description: 'Auto submit to the store? (production only)'
